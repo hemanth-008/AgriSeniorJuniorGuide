@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senior Submission | AgriSeniorJuniorGuide</title>
+  
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="sidebar">
+      <div class="dashboard-sidebar__header">
+        <a href="../index.html" class="logo">
+          <div class="logo__icon" style="width: 28px; height: 28px;">
+            <i data-lucide="leaf" style="width: 16px; height: 16px;"></i>
+          </div>
+          <div class="logo__text" style="font-size: 16px;">Agri<span>SJ</span>Guide</div>
+        </a>
+      </div>
+      
+      <nav class="dashboard-sidebar__nav">
+        <div class="dashboard-sidebar__section-title">Senior Portal</div>
+        <a href="#" class="dashboard-sidebar__link active"><i data-lucide="upload-cloud"></i> Submit Content</a>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="clock"></i> Pending Approval</a>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="check-circle"></i> Published Content</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">Mentorship</div>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="user"></i> My Profile</a>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="message-square"></i> Mentee Requests</a>
+      </nav>
+
+      <div class="dashboard-sidebar__footer">
+        <div class="dashboard-sidebar__user">
+          <div class="avatar avatar--sm" id="user-initials" style="background: var(--color-role-senior-bg); color: var(--color-role-senior); border-color: var(--color-role-senior);">S</div>
+          <div class="dashboard-sidebar__user-info">
+            <div class="dashboard-sidebar__user-name" id="user-name">Senior Mentor</div>
+            <div class="dashboard-sidebar__user-role text-muted" style="color: var(--color-role-senior);">Senior</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="flex items-center gap-2">
+          <h1 class="dashboard-topbar__title">Submit Content</h1>
+        </div>
+        <div class="dashboard-topbar__actions">
+          <button class="btn btn--ghost btn--sm logout-btn">Logout</button>
+        </div>
+      </header>
+
+      <div class="dashboard-content container container--narrow mx-auto">
+        
+        <div class="callout callout--info mb-4">
+          <div class="callout__title">Submission Guidelines</div>
+          <p>All video content must be uploaded to YouTube first (as Unlisted or Public). Paste the YouTube link below. Our admin team will review and publish it for juniors within 24 hours.</p>
+        </div>
+
+        <div class="card card--elevated">
+          <form id="submission-form" onsubmit="event.preventDefault(); alert('Submission sent for admin approval!'); this.reset();">
+            
+            <div class="form-group">
+              <label class="form-label">Content Type</label>
+              <div class="flex gap-2">
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                  <input type="radio" name="contentType" value="course" checked> Course Lecture
+                </label>
+                <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                  <input type="radio" name="contentType" value="topper"> Topper Strategy Video
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="title">Title</label>
+              <input type="text" id="title" class="form-input" placeholder="e.g., Complete Agronomy Crash Course Part 1" required>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="subject">Subject Area</label>
+                <select id="subject" class="form-input" required>
+                  <option value="">Select subject...</option>
+                  <option value="Agronomy">Agronomy</option>
+                  <option value="Soil Science">Soil Science</option>
+                  <option value="Plant Pathology">Plant Pathology</option>
+                  <option value="Entomology">Entomology</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="duration">Duration / Length</label>
+                <input type="text" id="duration" class="form-input" placeholder="e.g., 45 mins" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="youtubeUrl">YouTube Video URL</label>
+              <input type="url" id="youtubeUrl" class="form-input" placeholder="https://youtube.com/watch?v=..." required>
+              <div class="form-help">Paste the full YouTube link here. We embed this directly for juniors without hosting the file.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="description">Brief Description / Key Takeaways</label>
+              <textarea id="description" class="form-input" placeholder="What will juniors learn from this video?" required></textarea>
+            </div>
+
+            <hr class="divider">
+
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-muted">Status: <span class="badge badge--warning">Pending Admin Review</span></span>
+              <button type="submit" class="btn btn--primary">Submit Content</button>
+            </div>
+            
+          </form>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Auth check
+      const user = AuthStore.requireAuth();
+      if (!user) return;
+      
+      // Ensure Senior
+      if (user.role !== 'SENIOR') {
+        AuthStore.redirectBasedOnRole(user);
+        return;
+      }
+      
+      // Update UI
+      const nameEl = document.getElementById('user-name');
+      const initialsEl = document.getElementById('user-initials');
+      if (nameEl) nameEl.textContent = user.name;
+      if (initialsEl) initialsEl.textContent = user.name.charAt(0).toUpperCase();
+
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

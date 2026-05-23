@@ -1,0 +1,374 @@
+/* ==========================================================================
+   AgriSeniorJuniorGuide — Responsive Breakpoints
+   Mobile-first: base styles target 320px, queries add complexity upward.
+   Breakpoints: 480px, 768px, 1024px, 1280px, 1440px
+   ========================================================================== */
+
+/* ── Max-width overrides (mobile defaults) ───────────────────────────────── */
+
+/* On mobile, multi-column grids collapse to single column */
+.grid-2,
+.grid-3,
+.grid-4,
+.courses-grid,
+.assessment-categories,
+.tests-grid,
+.mentors-grid,
+.toppers-grid,
+.research-grid,
+.testimonials-grid {
+  grid-template-columns: 1fr;
+}
+
+.hero__stats {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.footer-grid {
+  grid-template-columns: 1fr;
+}
+
+.dashboard-stats {
+  grid-template-columns: 1fr;
+}
+
+/* Navigation: hide desktop, show hamburger */
+.nav-desktop,
+.nav-actions .nav-divider,
+.nav-actions .btn--ghost {
+  display: none;
+}
+
+.hamburger {
+  display: flex;
+}
+
+/* Step wizard becomes vertical on mobile */
+.step-wizard {
+  flex-direction: column;
+  gap: 0;
+}
+
+.step-wizard__item {
+  display: flex;
+  align-items: flex-start;
+  text-align: left;
+  padding: var(--space-1) 0;
+}
+
+.step-wizard__connector {
+  position: absolute;
+  top: 40px;
+  left: 19px;
+  width: 2px;
+  height: calc(100% - 40px);
+  right: auto;
+}
+
+.step-wizard__label {
+  margin-left: var(--space-2);
+  padding-top: 8px;
+}
+
+/* Hero adjustments */
+.hero {
+  min-height: auto;
+  padding: calc(var(--header-height) + var(--space-4)) 0 var(--space-4);
+}
+
+.hero__illustration {
+  display: none;
+}
+
+.hero__ctas {
+  flex-direction: column;
+}
+
+.hero__ctas .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.hero__trust-logos {
+  gap: var(--space-1);
+}
+
+.trust-badge {
+  font-size: 10px;
+  padding: 4px 10px;
+}
+
+/* Dashboard sidebar hidden on mobile */
+.dashboard-sidebar {
+  transform: translateX(-100%);
+  transition: transform var(--transition-base);
+}
+
+.dashboard-sidebar.mobile-open {
+  transform: translateX(0);
+}
+
+.dashboard-main {
+  margin-left: 0;
+}
+
+/* Section header */
+.section-header h2 {
+  font-size: var(--text-xl);
+}
+
+/* Rank advisor */
+.rank-advisor__input-group {
+  flex-direction: column;
+}
+
+/* Network controls */
+.network-controls {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.search-bar {
+  max-width: 100%;
+}
+
+/* Footer bottom */
+.footer-bottom {
+  flex-direction: column;
+  text-align: center;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   480px — Large phones
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 480px) {
+  .hero__stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .hero__ctas {
+    flex-direction: row;
+  }
+
+  .hero__ctas .btn {
+    width: auto;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   768px — Tablets
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .courses-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tests-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mentors-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .toppers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .research-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .testimonials-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .network-controls {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .search-bar {
+    max-width: 320px;
+  }
+
+  .rank-advisor__input-group {
+    flex-direction: row;
+  }
+
+  section {
+    padding: var(--space-10) 0;
+  }
+
+  .section-header h2 {
+    font-size: var(--text-3xl);
+  }
+
+  .assessment-categories {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   1024px — Small desktops / Landscape tablets
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  /* Show desktop nav, hide hamburger */
+  .nav-desktop {
+    display: flex;
+  }
+
+  .nav-actions .nav-divider,
+  .nav-actions .btn--ghost {
+    display: flex;
+  }
+
+  .hamburger {
+    display: none;
+  }
+
+  /* Full grids */
+  .grid-3,
+  .courses-grid,
+  .mentors-grid,
+  .toppers-grid,
+  .research-grid,
+  .testimonials-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Hero gets illustration back */
+  .hero {
+    min-height: 85vh;
+    padding: calc(var(--header-height) + var(--space-8)) 0 var(--space-8);
+  }
+
+  .hero__illustration {
+    display: block;
+  }
+
+  /* Step wizard horizontal again */
+  .step-wizard {
+    flex-direction: row;
+    gap: 0;
+  }
+
+  .step-wizard__item {
+    display: block;
+    text-align: center;
+    padding: 0 var(--space-1);
+  }
+
+  .step-wizard__connector {
+    top: 20px;
+    left: calc(50% + 24px);
+    right: calc(-50% + 24px);
+    width: auto;
+    height: 2px;
+  }
+
+  .step-wizard__label {
+    margin-left: 0;
+    padding-top: 0;
+  }
+
+  /* Footer 4-column */
+  .footer-grid {
+    grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  }
+
+  .footer-bottom {
+    flex-direction: row;
+    text-align: left;
+  }
+
+  /* Dashboard sidebar visible */
+  .dashboard-sidebar {
+    transform: translateX(0);
+  }
+
+  .dashboard-main {
+    margin-left: 260px;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .search-bar {
+    max-width: 480px;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   1280px — Desktop
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1280px) {
+  .container {
+    padding: 0 var(--space-4);
+  }
+
+  section {
+    padding: var(--space-12) 0;
+  }
+
+  h1 {
+    font-size: var(--text-5xl);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   1440px+ — Ultrawide
+   ══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1440px) {
+  .container {
+    max-width: var(--container-wide);
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Print Styles
+   ══════════════════════════════════════════════════════════════════════════ */
+@media print {
+  .site-header,
+  .hamburger,
+  .mobile-drawer,
+  .mobile-drawer-overlay,
+  .btn,
+  .footer-newsletter,
+  .footer-socials {
+    display: none !important;
+  }
+
+  body {
+    color: #000;
+    background: #fff;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}

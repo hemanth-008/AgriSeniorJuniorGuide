@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriSeniorJuniorGuide | ICAR JRF Command Center</title>
+  <meta name="description" content="From Farm to Lab — Your Complete ICAR JRF Command Center bridging the gap between Juniors and Seniors.">
+  
+  <!-- CSS Foundation -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/sections.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- Icons (Lucide via CDN for simplicity, or inline SVGs) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       NAVIGATION
+       ══════════════════════════════════════════════════════════════════════ -->
+  <header class="site-header" id="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo" aria-label="AgriSeniorJuniorGuide Home">
+        <div class="logo__icon">
+          <i data-lucide="leaf"></i>
+        </div>
+        <div class="logo__text">Agri<span>SeniorJunior</span>Guide</div>
+      </a>
+
+      <nav class="nav-desktop" aria-label="Main Navigation">
+        <a href="#courses" class="nav-link">Courses</a>
+        <a href="#tests" class="nav-link">Tests</a>
+        <a href="#network" class="nav-link">Mentor Network</a>
+        <a href="#counseling" class="nav-link">Counseling</a>
+        <a href="#research" class="nav-link">Research Hub</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="pages/login.html" class="btn btn--ghost">Login</a>
+        <div class="nav-divider"></div>
+        <a href="pages/signup.html" class="btn btn--primary">Join as a Junior</a>
+      </div>
+
+      <button class="hamburger" id="mobile-menu-btn" aria-label="Toggle Menu" aria-expanded="false">
+        <span class="hamburger__line"></span>
+        <span class="hamburger__line"></span>
+        <span class="hamburger__line"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Overlay -->
+  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay"></div>
+
+  <!-- Mobile Drawer -->
+  <aside class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+    <div class="mobile-drawer__header">
+      <div class="logo">
+        <div class="logo__icon">
+          <i data-lucide="leaf"></i>
+        </div>
+        <div class="logo__text">Agri<span>SeniorJunior</span>Guide</div>
+      </div>
+      <button class="mobile-drawer__close" id="mobile-drawer-close" aria-label="Close Menu">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <nav class="mobile-drawer__nav">
+      <a href="#courses" class="mobile-nav-link"><i data-lucide="book-open"></i> Courses</a>
+      <a href="#tests" class="mobile-nav-link"><i data-lucide="check-square"></i> Tests</a>
+      <a href="#network" class="mobile-nav-link"><i data-lucide="users"></i> Mentor Network</a>
+      <a href="#counseling" class="mobile-nav-link"><i data-lucide="compass"></i> Counseling</a>
+      <a href="#research" class="mobile-nav-link"><i data-lucide="microscope"></i> Research Hub</a>
+    </nav>
+    <div class="mobile-drawer__footer">
+      <a href="pages/login.html" class="btn btn--ghost btn--full">Login</a>
+      <a href="pages/signup.html" class="btn btn--primary btn--full">Join as a Junior</a>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       MAIN CONTENT
+       ══════════════════════════════════════════════════════════════════════ -->
+  <main id="main-content">
+
+    <!-- HERO SECTION -->
+    <section class="hero" id="home">
+      <div class="container relative z-10">
+        <div class="hero__content">
+          <span class="hero__tagline">ICAR JRF Preparation Ecosystem</span>
+          <h1 class="hero__title">The Bridge Between <em>Juniors</em> and ICAR Excellence</h1>
+          <p class="hero__subtitle">
+            Structured preparation, genuine senior mentorship, and complete admission counseling — built specifically for agricultural scholars aiming for the top.
+          </p>
+          <div class="hero__ctas">
+            <a href="pages/signup.html" class="btn btn--primary btn--lg">Join as a Junior →</a>
+            <a href="#network" class="btn btn--ghost btn--lg">Explore Mentors</a>
+          </div>
+
+          <div class="hero__trust">
+            <p class="hero__trust-label">Mentors joining from top institutes</p>
+            <div class="hero__trust-logos">
+              <span class="trust-badge">IARI</span>
+              <span class="trust-badge">PJTSAU</span>
+              <span class="trust-badge">TNAU</span>
+              <span class="trust-badge">GBPUAT</span>
+              <span class="trust-badge">OUAT</span>
+              <span class="trust-badge">NDRI</span>
+            </div>
+          </div>
+
+          <div class="hero__stats">
+            <div class="hero__stat">
+              <div class="stat-counter__value" id="stat-juniors">0</div>
+              <div class="stat-counter__label">Juniors</div>
+            </div>
+            <div class="hero__stat">
+              <div class="stat-counter__value" id="stat-courses">0</div>
+              <div class="stat-counter__label">Courses</div>
+            </div>
+            <div class="hero__stat">
+              <div class="stat-counter__value" id="stat-seniors">0</div>
+              <div class="stat-counter__label">Seniors</div>
+            </div>
+            <div class="hero__stat">
+              <div class="stat-counter__value" id="stat-tests">0</div>
+              <div class="stat-counter__label">Mock Tests</div>
+            </div>
+          </div>
+        </div>
+
+        <svg class="hero__illustration" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <path class="wheat-stalk text-primary" fill="currentColor" d="M100 190c-5-40-10-80 0-120 5-20 15-40 30-55-10 15-15 35-15 55-5 40 5 80 0 120z"/>
+          <path class="wheat-stalk text-primary" fill="currentColor" d="M90 190c-10-40-20-80-5-120 10-20 25-40 45-55-15 15-25 35-25 55-10 40 5 80 0 120z"/>
+          <path class="wheat-stalk text-primary" fill="currentColor" d="M110 190c5-40 10-80 0-120-5-20-15-40-30-55 10 15 15 35 15 55 5 40-5 80 0 120z"/>
+        </svg>
+      </div>
+    </section>
+
+    <!-- COURSES SECTION -->
+    <section class="courses-section" id="courses">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Preparation</span>
+          <h2>Structured Course Curriculum</h2>
+          <p>Comprehensive video lectures and crash courses prepared by subject matter experts.</p>
+        </div>
+
+        <div class="filter-bar" id="course-filters">
+          <!-- Populated by JS -->
+        </div>
+
+        <div id="courses-container" class="courses-grid">
+          <!-- Populated by JS. Empty state will be shown initially. -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ASSESSMENT HUB -->
+    <section class="assessment-section" id="tests">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Evaluation</span>
+          <h2>Assessment Engine</h2>
+          <p>Test your knowledge with strictly ICAR pattern questions and instant analytics.</p>
+        </div>
+
+        <div class="assessment-categories">
+          <div class="assessment-category-card active">
+            <div class="assessment-category-card__icon"><i data-lucide="calendar"></i></div>
+            <h3 class="assessment-category-card__title">Weekly Unit Tests</h3>
+            <p class="assessment-category-card__desc">Subject-wise 30 MCQ tests</p>
+          </div>
+          <div class="assessment-category-card">
+            <div class="assessment-category-card__icon"><i data-lucide="award"></i></div>
+            <h3 class="assessment-category-card__title">Grand Tests</h3>
+            <p class="assessment-category-card__desc">Full syllabus 120 MCQ simulators</p>
+          </div>
+          <div class="assessment-category-card">
+            <div class="assessment-category-card__icon"><i data-lucide="calculator"></i></div>
+            <h3 class="assessment-category-card__title">Numerical Zone</h3>
+            <p class="assessment-category-card__desc">Calculation heavy practice</p>
+          </div>
+        </div>
+
+        <div id="tests-container" class="tests-grid">
+           <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- MENTOR NETWORK -->
+    <section class="network-section" id="network">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Connection</span>
+          <h2>Senior Mentor Directory</h2>
+          <p>Connect with seniors and researchers from top agricultural universities for guidance.</p>
+        </div>
+
+        <div class="network-controls">
+          <div class="search-bar">
+            <i data-lucide="search" class="search-bar__icon"></i>
+            <input type="text" class="form-input" id="mentor-search" placeholder="Search by name, university, or subject...">
+          </div>
+          <select class="form-input" id="mentor-university-filter" style="max-width: 200px;">
+            <option value="">All Universities</option>
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <div id="mentors-container" class="mentors-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TOPPER VAULT -->
+    <section class="topper-section" id="toppers">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Insights</span>
+          <h2>Topper Strategy Vault</h2>
+          <p>Learn directly from the seniors who cracked the code.</p>
+        </div>
+
+        <div id="toppers-container" class="toppers-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- COUNSELING TIMELINE -->
+    <section class="counseling-section" id="counseling">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Guidance</span>
+          <h2>Admission & Counseling Guide</h2>
+          <p>Navigate the post-exam process with confidence.</p>
+        </div>
+
+        <div class="step-wizard" id="counseling-steps">
+          <!-- Populated by JS -->
+        </div>
+
+        <div id="counseling-details-container">
+          <!-- Details panels populated by JS -->
+        </div>
+
+        <div class="rank-advisor">
+          <h3 class="rank-advisor__title">Seat Allotment Strategy</h3>
+          <p class="rank-advisor__subtitle">Explore university options based on rank cutoffs.</p>
+          
+          <div class="rank-advisor__input-group">
+             <input type="number" class="form-input" id="rank-input" placeholder="Enter Expected AIR...">
+             <button class="btn btn--primary" id="check-rank-btn">Analyze Options</button>
+          </div>
+
+          <div class="rank-advisor__results" id="rank-results">
+            <div class="table-wrapper mt-3">
+              <table class="table" id="rank-table">
+                <thead>
+                  <tr>
+                    <th>University</th>
+                    <th>Location</th>
+                    <th>General Cutoff</th>
+                    <th>OBC Cutoff</th>
+                    <th>Stipend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- M.SC. RESEARCH HUB -->
+    <section class="research-section" id="research">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Transition</span>
+          <h2>M.Sc. Research Hub</h2>
+          <p>Resources for newly admitted scholars starting their thesis journey.</p>
+        </div>
+
+        <div class="research-grid" id="research-container">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="testimonials-section" id="testimonials">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Community</span>
+          <h2>Junior Success Stories</h2>
+          <p>Hear from juniors who navigated their preparation with us.</p>
+        </div>
+
+        <div id="testimonials-container" class="testimonials-grid">
+           <!-- Empty state initially -->
+           <div class="placeholder-card" style="grid-column: 1 / -1;">
+             <i data-lucide="message-square" style="width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;"></i>
+             <h3>Testimonials will appear here</h3>
+             <p class="placeholder-card__text">As our first batch of juniors completes their journey, their experiences will be shared here.</p>
+           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UNIVERSITY PARTNERS -->
+    <section class="partners-section">
+      <div class="container">
+        <div class="section-header">
+          <h2>Seniors Joining From</h2>
+        </div>
+        <div class="partners-marquee">
+           <div class="partners-marquee__track" id="partners-track">
+             <!-- Populated by JS -->
+           </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════════════════════ -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <!-- Col 1 -->
+        <div>
+          <div class="logo mb-2">
+            <div class="logo__icon" style="background: var(--color-white); color: var(--color-primary);">
+              <i data-lucide="leaf"></i>
+            </div>
+            <div class="logo__text" style="color: var(--color-white);">Agri<span>SeniorJunior</span>Guide</div>
+          </div>
+          <p class="footer-col__about">
+            The ultimate bridge between ambitious Juniors and experienced Seniors across Indian agricultural universities.
+          </p>
+          <div class="footer-socials">
+            <a href="#" class="footer-social-link" aria-label="LinkedIn"><i data-lucide="linkedin"></i></a>
+            <a href="#" class="footer-social-link" aria-label="YouTube"><i data-lucide="youtube"></i></a>
+            <a href="#" class="footer-social-link" aria-label="Instagram"><i data-lucide="instagram"></i></a>
+            <a href="#" class="footer-social-link" aria-label="Twitter"><i data-lucide="twitter"></i></a>
+          </div>
+        </div>
+
+        <!-- Col 2 -->
+        <div>
+          <h4 class="footer-col__title">Platform</h4>
+          <a href="#courses" class="footer-col__link">Courses</a>
+          <a href="#tests" class="footer-col__link">Mock Tests</a>
+          <a href="#network" class="footer-col__link">Mentor Network</a>
+          <a href="#toppers" class="footer-col__link">Topper Vault</a>
+        </div>
+
+        <!-- Col 3 -->
+        <div>
+          <h4 class="footer-col__title">Resources</h4>
+          <a href="#counseling" class="footer-col__link">Counseling Guide</a>
+          <a href="#research" class="footer-col__link">Research Hub</a>
+          <a href="#" class="footer-col__link">ICAR Syllabus</a>
+          <a href="#" class="footer-col__link">FAQ</a>
+        </div>
+
+        <!-- Col 4 -->
+        <div>
+          <h4 class="footer-col__title">Stay Updated</h4>
+          <div class="footer-newsletter">
+            <p class="footer-newsletter__text">Get notifications about new courses and senior sessions.</p>
+            <form class="footer-newsletter__form" onsubmit="event.preventDefault(); alert('Subscribed!');">
+              <input type="email" placeholder="Email address..." class="footer-newsletter__input" required>
+              <button type="submit" class="btn btn--primary">Join</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p class="footer-bottom__text">&copy; 2026 AgriSeniorJuniorGuide. All rights reserved.</p>
+        <div class="footer-bottom__links">
+          <a href="#" class="footer-bottom__link">Privacy Policy</a>
+          <a href="#" class="footer-bottom__link">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Connect Modal -->
+  <div class="modal-overlay" id="connect-modal-overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="connect-modal-title">
+      <div class="modal__header">
+        <h3 class="modal__title" id="connect-modal-title">Connect with Senior</h3>
+        <button class="modal__close" id="connect-modal-close" aria-label="Close modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal__body">
+        <p class="text-sm text-muted mb-3">Send a message to request guidance. The senior will reply via email if they have availability.</p>
+        <form id="connect-form">
+          <div class="form-group">
+            <label class="form-label" for="connect-subject">Subject Area of Interest</label>
+            <select class="form-input" id="connect-subject" required>
+              <option value="">Select a subject...</option>
+              <option value="agronomy">Agronomy</option>
+              <option value="soil_science">Soil Science</option>
+              <option value="plant_pathology">Plant Pathology</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="connect-message">Your Message</label>
+            <textarea class="form-input" id="connect-message" placeholder="Briefly introduce yourself and what specific guidance you need..." required></textarea>
+          </div>
+          <div class="modal__footer mt-4">
+            <button type="button" class="btn btn--secondary" id="connect-modal-cancel">Cancel</button>
+            <button type="submit" class="btn btn--primary">Send Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Modal (Topper Vault / Courses) -->
+  <div class="modal-overlay" id="video-modal-overlay">
+    <div class="modal" style="max-width: 800px; padding: 0; overflow: hidden;" role="dialog" aria-modal="true">
+      <div class="video-wrapper" id="video-container">
+        <!-- iframe injected via JS -->
+      </div>
+      <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+        <h3 id="video-title" style="font-size: 18px; margin: 0;"></h3>
+        <button class="btn btn--ghost btn--sm" id="video-modal-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/courses.js"></script>
+  <script src="js/assessment.js"></script>
+  <script src="js/network.js"></script>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

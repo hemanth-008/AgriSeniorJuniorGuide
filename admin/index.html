@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | AgriSeniorJuniorGuide</title>
+  
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="sidebar">
+      <div class="dashboard-sidebar__header">
+        <a href="../index.html" class="logo">
+          <div class="logo__icon" style="background: var(--color-role-admin); width: 28px; height: 28px;">
+            <i data-lucide="leaf" style="width: 16px; height: 16px;"></i>
+          </div>
+          <div class="logo__text" style="font-size: 16px;">Agri<span>SJ</span>Admin</div>
+        </a>
+      </div>
+      
+      <nav class="dashboard-sidebar__nav">
+        <div class="dashboard-sidebar__section-title">Core</div>
+        <a href="#" class="dashboard-sidebar__link active"><i data-lucide="bar-chart"></i> Overview</a>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="users"></i> Users & Roles</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">Content Management</div>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="check-square"></i> Pending Approvals</a>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="video"></i> Manage Courses</a>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="file-check"></i> Manage Tests</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">Settings</div>
+        <a href="#" class="dashboard-sidebar__link"><i data-lucide="settings"></i> Platform Config</a>
+      </nav>
+
+      <div class="dashboard-sidebar__footer">
+        <div class="dashboard-sidebar__user">
+          <div class="avatar avatar--sm" id="user-initials" style="background: var(--color-role-admin-bg); color: var(--color-role-admin); border-color: var(--color-role-admin);">A</div>
+          <div class="dashboard-sidebar__user-info">
+            <div class="dashboard-sidebar__user-name" id="user-name">Super Admin</div>
+            <div class="dashboard-sidebar__user-role text-muted" style="color: var(--color-role-admin);">Administrator</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="flex items-center gap-2">
+          <h1 class="dashboard-topbar__title">Admin Command Center</h1>
+        </div>
+        <div class="dashboard-topbar__actions">
+          <button class="btn btn--ghost btn--sm logout-btn">Logout</button>
+        </div>
+      </header>
+
+      <div class="dashboard-content container">
+        
+        <div class="callout callout--warning mb-4">
+          <div class="callout__title">Admin Notice</div>
+          <p>You have 3 pending content submissions from Seniors that require review before they are visible to Juniors.</p>
+        </div>
+
+        <div class="dashboard-stats">
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card__label">Total Juniors</div>
+            <div class="dashboard-stat-card__value">0</div>
+          </div>
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card__label">Total Seniors</div>
+            <div class="dashboard-stat-card__value">0</div>
+          </div>
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card__label">Published Courses</div>
+            <div class="dashboard-stat-card__value">0</div>
+          </div>
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-card__label">Active Tests</div>
+            <div class="dashboard-stat-card__value">0</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <!-- Pending Approvals -->
+          <section class="dashboard-section">
+            <div class="dashboard-section__header">
+              <h2 class="dashboard-section__title">Pending Content Approvals</h2>
+            </div>
+            <div class="dashboard-section__body" style="padding: 0;">
+              
+              <div class="content-item approval-item">
+                <div class="content-item__info">
+                  <div class="content-item__title">Complete Agronomy Crash Course Part 1</div>
+                  <div class="content-item__meta">Submitted by Senior Mentor • Type: Course • YouTube Embed</div>
+                </div>
+                <div class="content-item__actions">
+                  <button class="btn btn--secondary btn--sm" title="Preview"><i data-lucide="eye" style="width: 14px; height: 14px;"></i></button>
+                  <button class="btn btn--primary btn--sm" title="Approve"><i data-lucide="check" style="width: 14px; height: 14px;"></i></button>
+                  <button class="btn btn--danger btn--sm" title="Reject"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+                </div>
+              </div>
+
+              <div class="content-item approval-item">
+                <div class="content-item__info">
+                  <div class="content-item__title">AIR 58 Strategy - Plant Pathology</div>
+                  <div class="content-item__meta">Submitted by Senior Mentor • Type: Topper Video</div>
+                </div>
+                <div class="content-item__actions">
+                  <button class="btn btn--secondary btn--sm" title="Preview"><i data-lucide="eye" style="width: 14px; height: 14px;"></i></button>
+                  <button class="btn btn--primary btn--sm" title="Approve"><i data-lucide="check" style="width: 14px; height: 14px;"></i></button>
+                  <button class="btn btn--danger btn--sm" title="Reject"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- Recent Signups -->
+          <section class="dashboard-section">
+            <div class="dashboard-section__header">
+              <h2 class="dashboard-section__title">Recent Signups</h2>
+            </div>
+            <div class="dashboard-section__body">
+              <div class="empty-state" style="padding: var(--space-2);">
+                <i data-lucide="users" class="empty-state__icon" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+                <p class="empty-state__text">No new juniors have signed up today.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Auth check
+      const user = AuthStore.requireAuth();
+      if (!user) return;
+      
+      // Ensure Admin
+      if (user.role !== 'ADMIN') {
+        AuthStore.redirectBasedOnRole(user);
+        return;
+      }
+      
+      // Update UI
+      const nameEl = document.getElementById('user-name');
+      const initialsEl = document.getElementById('user-initials');
+      if (nameEl) nameEl.textContent = user.name;
+      if (initialsEl) initialsEl.textContent = user.name.charAt(0).toUpperCase();
+
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
