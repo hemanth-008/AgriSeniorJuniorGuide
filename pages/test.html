@@ -342,15 +342,20 @@
     </div>
   </div>
 
-  <script src="../js/data.js"></script>
-  <script src="../js/auth.js"></script>
-  <script>
-    // Require auth
-    if (!AuthStore.requireAuth()) {
-      throw new Error("Authentication required");
-    }
+  <script type="module">
+    import { AuthStore } from '../js/auth.js';
+    import { supabase } from '../js/supabase.js';
 
-    lucide.createIcons();
+    let user;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Require auth
+      user = await AuthStore.requireAuth();
+      if (!user) return;
+      
+      lucide.createIcons();
+      await loadTest();
+    });
 
     // --- State ---
     let questions = [];
@@ -359,7 +364,7 @@
     let markedForReview = new Set();
     
     let timerInterval;
-    let timeLeft = 30 * 60; // 30 minutes in seconds (demo)
+    let timeLeft = 30 * 60; // default 30 mins
     
     // --- Elements ---
     const qText = document.getElementById('q-text');
@@ -372,27 +377,66 @@
     const timeDisplay = document.getElementById('time-display');
     const timerBox = document.getElementById('timer');
 
-    // --- Init ---
-    document.addEventListener('DOMContentLoaded', () => {
-      // Load sample questions from data.js
-      if (window.APP_DATA && window.APP_DATA.sampleQuestions) {
-        questions = window.APP_DATA.sampleQuestions;
+    async function loadTest() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const testId = urlParams.get('test_id');
+
+      if (!testId) {
+        // Fallback or demo
+        document.getElementById('test-title').textContent = "Demo ICAR Assessment";
+        if (window.APP_DATA && window.APP_DATA.sampleQuestions) {
+          questions = window.APP_DATA.sampleQuestions;
+        }
+      } else {
+        try {
+          // Fetch test details
+          const { data: testData, error: tErr } = await supabase.from('tests').select('*').eq('id', testId).single();
+          if (tErr) throw tErr;
+          
+          document.getElementById('test-title').textContent = testData.title || "ICAR Assessment";
+          timeLeft = (testData.duration_minutes || 30) * 60;
+
+          // Fetch questions
+          const { data: qData, error: qErr } = await supabase.from('questions').select('*').eq('test_id', testId);
+          if (qErr) throw qErr;
+
+          if (qData && qData.length > 0) {
+            // Assume qData options are stored as JSON: [{key: 'A', text: '...'}, ...]
+            questions = qData.map(q => ({
+              id: q.id,
+              subject: q.subject || testData.subject || 'General',
+              isNumerical: q.is_numerical || false,
+              text: q.text,
+              options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
+              correctKey: q.correct_key,
+              explanation: q.explanation || ''
+            }));
+          } else {
+             // Fallback to sample if empty
+             if (window.APP_DATA && window.APP_DATA.sampleQuestions) {
+               questions = window.APP_DATA.sampleQuestions;
+             }
+          }
+        } catch (e) {
+          console.error("Error loading test:", e);
+        }
       }
-      
+
       if (questions.length === 0) {
-        alert("No questions found. Redirecting.");
+        alert("No questions found for this test.");
         window.location.href = '../pages/junior-dashboard.html';
         return;
       }
 
-      document.getElementById('test-title').textContent = "Demo ICAR Assessment";
       totalEl.textContent = questions.length;
-
       initNavigator();
       renderQuestion(currentIdx);
       startTimer();
 
-      // Event Listeners
+      setupListeners();
+    }
+
+    function setupListeners() {
       document.getElementById('btn-next').addEventListener('click', () => {
         if (currentIdx < questions.length - 1) {
           currentIdx++;
@@ -424,21 +468,17 @@
       });
       
       document.getElementById('btn-view-solutions').addEventListener('click', () => {
-        // Simple review mode: hide score screen, show test interface, but locked down
         document.getElementById('score-screen').style.display = 'none';
         document.getElementById('test-interface').style.display = 'block';
-        
-        // Hide submit and review buttons
         document.getElementById('btn-submit-test').style.display = 'none';
         document.getElementById('btn-review').style.display = 'none';
         timerBox.style.display = 'none';
         
-        // Change logic to show answers
         window.isReviewMode = true;
         currentIdx = 0;
         renderQuestion(currentIdx);
       });
-    });
+    }
 
     // --- Logic ---
     function initNavigator() {
@@ -459,6 +499,7 @@
     function updateNavigator() {
       questions.forEach((q, idx) => {
         const btn = document.getElementById(`nav-btn-${idx}`);
+        if (!btn) return;
         btn.className = 'nav-btn'; // reset
         
         if (idx === currentIdx) btn.classList.add('active');
@@ -488,9 +529,8 @@
           div.classList.add('selected');
         }
         
-        // If in review mode, show correct/wrong coloring
         if (window.isReviewMode) {
-           div.style.pointerEvents = 'none'; // disable clicking
+           div.style.pointerEvents = 'none';
            if (opt.key === q.correctKey) {
              div.classList.add('correct');
            } else if (answers[q.id] === opt.key && opt.key !== q.correctKey) {
@@ -506,26 +546,22 @@
         if (!window.isReviewMode) {
           div.addEventListener('click', () => {
             answers[q.id] = opt.key;
-            // re-render options to update selected state visually
             renderQuestion(currentIdx); 
           });
         }
         optionsContainer.appendChild(div);
       });
       
-      // If review mode, inject explanation at bottom
       if (window.isReviewMode) {
         const expl = document.createElement('div');
         expl.className = 'explanation-box';
-        // Check if user answered correctly
         const userAns = answers[q.id];
         let statusHtml = '';
         if (!userAns) statusHtml = '<span style="color: var(--color-warning); font-weight: bold;">Unattempted</span>';
         else if (userAns === q.correctKey) statusHtml = '<span style="color: var(--color-success); font-weight: bold;">Correct</span>';
         else statusHtml = '<span style="color: var(--color-error); font-weight: bold;">Incorrect</span>';
         
-        // Convert newlines to br for formatting
-        const formattedExplanation = q.explanation.replace(/\n/g, '<br>');
+        const formattedExplanation = (q.explanation || 'No explanation provided.').replace(/\n/g, '<br>');
         
         expl.innerHTML = `
           <div style="margin-bottom: 8px; font-size: 14px;"><strong>Status:</strong> ${statusHtml}</div>
@@ -537,7 +573,6 @@
 
       updateNavigator();
       
-      // Update next/prev buttons state
       document.getElementById('btn-prev').disabled = (idx === 0);
       document.getElementById('btn-next').disabled = (idx === questions.length - 1);
     }
@@ -564,12 +599,10 @@
       }
     }
 
-    function submitTest() {
+    async function submitTest() {
       clearInterval(timerInterval);
-      document.getElementById('test-interface').style.display = 'none';
-      document.getElementById('score-screen').style.display = 'block';
-
-      // Calculate score (+4 for correct, -1 for wrong ICAR marking scheme)
+      
+      // Calculate score (+4 for correct, -1 for wrong)
       let correct = 0;
       let incorrect = 0;
       let unattempted = 0;
@@ -588,8 +621,34 @@
         }
       });
 
-      const maxScore = questions.length * 4;
       const accuracy = correct + incorrect > 0 ? Math.round((correct / (correct + incorrect)) * 100) : 0;
+
+      // Submit to Supabase test_attempts table
+      if (user) {
+        try {
+          document.getElementById('btn-submit-test').textContent = "Saving result...";
+          document.getElementById('btn-submit-test').disabled = true;
+
+          const urlParams = new URLSearchParams(window.location.search);
+          const testId = urlParams.get('test_id') || null;
+
+          await supabase.from('test_attempts').insert({
+            student_id: user.id,
+            test_id: testId,
+            score: score,
+            accuracy: accuracy,
+            correct_count: correct,
+            incorrect_count: incorrect,
+            answers_json: answers
+          });
+        } catch (e) {
+          console.error("Failed to save test attempt:", e);
+        }
+      }
+
+      // UI update
+      document.getElementById('test-interface').style.display = 'none';
+      document.getElementById('score-screen').style.display = 'block';
 
       document.getElementById('score-value').textContent = score;
       document.getElementById('score-accuracy').textContent = `${accuracy}%`;

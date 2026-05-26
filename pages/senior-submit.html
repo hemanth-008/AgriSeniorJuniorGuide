@@ -68,7 +68,7 @@
         </div>
 
         <div class="card card--elevated">
-          <form id="submission-form" onsubmit="event.preventDefault(); alert('Submission sent for admin approval!'); this.reset();">
+          <form id="submission-form">
             
             <div class="form-group">
               <label class="form-label">Content Type</label>
@@ -120,7 +120,10 @@
 
             <div class="flex justify-between items-center">
               <span class="text-sm text-muted">Status: <span class="badge badge--warning">Pending Admin Review</span></span>
-              <button type="submit" class="btn btn--primary">Submit Content</button>
+              <div>
+                <span id="submit-status" class="text-sm mr-3"></span>
+                <button type="submit" id="submit-btn" class="btn btn--primary">Submit Content</button>
+              </div>
             </div>
             
           </form>
@@ -130,15 +133,19 @@
     </main>
   </div>
 
-  <script src="../js/auth.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
+  <script type="module">
+    import { AuthStore } from '../js/auth.js';
+    import { supabase } from '../js/supabase.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
       // 1. Auth check
-      const user = AuthStore.requireAuth();
+      const user = await AuthStore.requireAuth();
       if (!user) return;
       
+      const role = user.user_metadata?.role || 'JUNIOR';
+
       // Ensure Senior
-      if (user.role !== 'SENIOR') {
+      if (role !== 'SENIOR') {
         AuthStore.redirectBasedOnRole(user);
         return;
       }
@@ -146,10 +153,59 @@
       // Update UI
       const nameEl = document.getElementById('user-name');
       const initialsEl = document.getElementById('user-initials');
-      if (nameEl) nameEl.textContent = user.name;
-      if (initialsEl) initialsEl.textContent = user.name.charAt(0).toUpperCase();
+      if (nameEl) nameEl.textContent = user.user_metadata.full_name || user.email;
+      if (initialsEl) initialsEl.textContent = (user.user_metadata.full_name || user.email).charAt(0).toUpperCase();
 
       lucide.createIcons();
+
+      // Form Handling
+      const form = document.getElementById('submission-form');
+      const submitBtn = document.getElementById('submit-btn');
+      const submitStatus = document.getElementById('submit-status');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+        submitStatus.textContent = '';
+        
+        const contentType = document.querySelector('input[name="contentType"]:checked').value;
+        const title = document.getElementById('title').value;
+        const subject = document.getElementById('subject').value;
+        const duration = document.getElementById('duration').value;
+        const youtube_url = document.getElementById('youtubeUrl').value;
+        const description = document.getElementById('description').value;
+
+        try {
+          const { error } = await supabase
+            .from('submissions')
+            .insert({
+              title,
+              subject,
+              duration,
+              youtube_url,
+              description,
+              content_type: contentType,
+              status: 'pending',
+              user_id: user.id
+            });
+
+          if (error) throw error;
+
+          submitStatus.textContent = "Submission sent for admin approval!";
+          submitStatus.className = "text-sm mr-3 text-success";
+          form.reset();
+
+        } catch(err) {
+          console.error("Submission failed:", err);
+          submitStatus.textContent = "Error: " + err.message;
+          submitStatus.className = "text-sm mr-3 text-error";
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Submit Content";
+        }
+      });
     });
   </script>
 </body>

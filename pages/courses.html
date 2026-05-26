@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Courses | AgriSeniorJuniorGuide</title>
+  
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar (Same as dashboard) -->
+    <aside class="dashboard-sidebar" id="sidebar">
+      <div class="dashboard-sidebar__header">
+        <a href="../index.html" class="logo">
+          <div class="logo__icon" style="width: 28px; height: 28px;">
+            <i data-lucide="leaf" style="width: 16px; height: 16px;"></i>
+          </div>
+          <div class="logo__text" style="font-size: 16px;">Agri<span>SJ</span>Guide</div>
+        </a>
+      </div>
+      
+      <nav class="dashboard-sidebar__nav">
+        <div class="dashboard-sidebar__section-title">Dashboard</div>
+        <a href="junior-dashboard.html" class="dashboard-sidebar__link"><i data-lucide="layout-dashboard"></i> Overview</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">My Learning</div>
+        <a href="courses.html" class="dashboard-sidebar__link active"><i data-lucide="play-circle"></i> Browse Courses</a>
+        <a href="test-list.html" class="dashboard-sidebar__link"><i data-lucide="check-square"></i> Take a Test</a>
+        <a href="junior-dashboard.html#submit-assignment-section" class="dashboard-sidebar__link"><i data-lucide="upload-cloud"></i> Submit Assignment</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">Networking</div>
+        <a href="network.html" class="dashboard-sidebar__link"><i data-lucide="users"></i> Find a Senior</a>
+      </nav>
+
+      <div class="dashboard-sidebar__footer">
+        <div class="dashboard-sidebar__user">
+          <div class="avatar avatar--sm" id="user-initials">J</div>
+          <div class="dashboard-sidebar__user-info">
+            <div class="dashboard-sidebar__user-name" id="user-name">Junior Student</div>
+            <div class="dashboard-sidebar__user-role text-muted">Junior</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="flex items-center gap-2">
+          <h1 class="dashboard-topbar__title">Course Catalog</h1>
+        </div>
+      </header>
+
+      <div class="dashboard-content container">
+        <div id="courses-container" class="grid-3">
+          <div class="empty-state" style="grid-column: 1 / -1;">
+             <div class="spinner mx-auto mb-2"></div>
+             Loading courses...
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Video Modal -->
+  <div class="modal-overlay" id="video-modal-overlay">
+    <div class="modal" style="max-width: 800px; padding: 0; overflow: hidden;" role="dialog" aria-modal="true">
+      <div class="video-wrapper" id="video-container">
+        <!-- iframe injected via JS -->
+      </div>
+      <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+        <h3 id="video-title" style="font-size: 18px; margin: 0;"></h3>
+        <button class="btn btn--ghost btn--sm" id="video-modal-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { AuthStore } from '../js/auth.js';
+    import { supabase } from '../js/supabase.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Auth check
+      const user = await AuthStore.requireAuth();
+      if (!user) return;
+      
+      const role = user.user_metadata?.role || 'JUNIOR';
+
+      if (role !== 'JUNIOR') {
+        AuthStore.redirectBasedOnRole(user);
+        return;
+      }
+      
+      // Update UI
+      const nameEl = document.getElementById('user-name');
+      const initialsEl = document.getElementById('user-initials');
+      if (nameEl) nameEl.textContent = user.user_metadata.full_name || user.email;
+      if (initialsEl) initialsEl.textContent = (user.user_metadata.full_name || user.email).charAt(0).toUpperCase();
+
+      lucide.createIcons();
+
+      // Fetch Courses
+      try {
+        const { data: courses, error } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const container = document.getElementById('courses-container');
+        
+        if (!courses || courses.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1; padding: var(--space-6);">
+              <i data-lucide="video" class="empty-state__icon" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
+              <h3 class="empty-state__title">Courses coming soon</h3>
+              <p class="empty-state__text">Our seniors are actively preparing high-quality content. Check back shortly.</p>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+
+        let html = '';
+        courses.forEach(course => {
+          let videoId = '';
+          if (course.youtube_url) {
+            try {
+              if (course.youtube_url.includes('v=')) videoId = course.youtube_url.split('v=')[1].split('&')[0];
+              else if (course.youtube_url.includes('youtu.be/')) videoId = course.youtube_url.split('youtu.be/')[1].split('?')[0];
+            } catch(e){}
+          }
+          const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '../assets/images/course-placeholder.jpg';
+
+          html += `
+            <div class="card card--elevated" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+              <div style="position: relative; padding-bottom: 56.25%; background: var(--color-gray-200);">
+                <img src="${thumbUrl}" alt="Thumbnail" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover;">
+                <div style="position: absolute; inset:0; background: rgba(0,0,0,0.3); display: flex; align-items:center; justify-content:center; cursor:pointer;" class="play-btn" data-url="${course.youtube_url}" data-title="${course.title}">
+                  <i data-lucide="play-circle" style="color: white; width: 48px; height: 48px;"></i>
+                </div>
+              </div>
+              <div style="padding: var(--space-3); flex: 1; display: flex; flex-direction: column;">
+                <div class="badge badge--success mb-2" style="align-self: flex-start;">${course.subject || 'General'}</div>
+                <h3 class="card__title mb-1">${course.title}</h3>
+                <p class="text-sm text-muted mb-3" style="flex: 1;">${course.description ? (course.description.substring(0, 80) + '...') : 'No description available.'}</p>
+                <button class="btn btn--secondary btn--full play-btn" data-url="${course.youtube_url}" data-title="${course.title}">Watch Lesson</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+        lucide.createIcons();
+
+        // Bind modals
+        document.querySelectorAll('.play-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const url = btn.getAttribute('data-url');
+            const title = btn.getAttribute('data-title');
+            
+            let vId = '';
+            if (url.includes('v=')) vId = url.split('v=')[1].split('&')[0];
+            else if (url.includes('youtu.be/')) vId = url.split('youtu.be/')[1].split('?')[0];
+            
+            if(vId) {
+              document.getElementById('video-title').textContent = title;
+              document.getElementById('video-container').innerHTML = `<iframe src="https://www.youtube.com/embed/${vId}?autoplay=1" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+              document.getElementById('video-modal-overlay').classList.add('active');
+            }
+          });
+        });
+      } catch (err) {
+        console.error("Courses fetch error:", err);
+      }
+
+      // Modal close
+      document.getElementById('video-modal-close').addEventListener('click', () => {
+        document.getElementById('video-modal-overlay').classList.remove('active');
+        document.getElementById('video-container').innerHTML = ''; // Stop video
+      });
+    });
+  </script>
+</body>
+</html>

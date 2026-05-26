@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | AgriSeniorJuniorGuide</title>
+  
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    body {
+      background-color: var(--color-gray-50);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .admin-login-card {
+      background: var(--color-white);
+      padding: var(--space-6);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+    .admin-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-4);
+    }
+    .admin-logo__icon {
+      background: var(--color-primary);
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-white);
+    }
+    .admin-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-charcoal);
+      margin-bottom: var(--space-2);
+    }
+    .admin-subtitle {
+      color: var(--color-gray-600);
+      margin-bottom: var(--space-6);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="admin-login-card">
+    <div class="admin-logo">
+      <div class="admin-logo__icon">
+        <i data-lucide="shield"></i>
+      </div>
+    </div>
+    <h1 class="admin-title">Admin Portal</h1>
+    <p class="admin-subtitle">Secure access required</p>
+
+    <div id="error-msg" class="callout callout--error mb-4 text-left" style="display: none;">
+      <p id="error-text">Access denied. This area is restricted to administrators only.</p>
+    </div>
+
+    <form id="admin-login-form" class="text-left">
+      <div class="form-group">
+        <label class="form-label" for="email">Admin Email</label>
+        <input type="email" id="email" class="form-input" placeholder="admin@example.com" required>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--full mt-4">Authenticate</button>
+    </form>
+    
+    <div class="mt-4 text-sm text-muted">
+      Return to <a href="../index.html" class="text-primary">Public Site</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+    lucide.createIcons();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('admin-login-form');
+      const errorMsg = document.getElementById('error-msg');
+      const errorText = document.getElementById('error-text');
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const btn = form.querySelector('button[type="submit"]');
+        
+        btn.textContent = "Authenticating...";
+        btn.disabled = true;
+        errorMsg.style.display = 'none';
+
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+
+          if (error) throw error;
+          
+          if (!data.session) {
+             throw new Error("No session created");
+          }
+
+          const userId = data.session.user.id;
+
+          // Check profiles table
+          const { data: profileData, error: profileErr } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .single();
+
+          if (profileErr) throw profileErr;
+
+          // Our DB uses 'ADMIN' or 'admin' depending on how it was inserted. 
+          // Will lowercase to be safe.
+          const userRole = (profileData.role || '').toLowerCase();
+
+          if (userRole === 'admin') {
+            window.location.href = 'index.html';
+          } else {
+            await supabase.auth.signOut();
+            errorText.textContent = "Access denied. This area is restricted to administrators only.";
+            errorMsg.style.display = 'block';
+            btn.textContent = "Authenticate";
+            btn.disabled = false;
+          }
+        } catch (err) {
+          errorText.textContent = err.message;
+          errorMsg.style.display = 'block';
+          btn.textContent = "Authenticate";
+          btn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

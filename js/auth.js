@@ -1,76 +1,68 @@
-/* ==========================================================================
-   AgriSeniorJuniorGuide — Authentication & Role System
-   Frontend-only auth simulation using localStorage.
-   Roles: ADMIN, SENIOR, JUNIOR (default).
-   ========================================================================== */
+import { supabase } from './supabase.js';
 
-const AuthStore = {
-  // Key for localStorage
-  KEY: 'agri_guide_user',
-  
-  // Get current user
-  getUser() {
+export const AuthStore = {
+  // Get current user session
+  async getUser() {
     try {
-      const data = localStorage.getItem(this.KEY);
-      return data ? JSON.parse(data) : null;
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error) {
+        return null;
+      }
+      return user;
     } catch (e) {
+      console.error(e);
       return null;
     }
   },
   
-  // Login simulated
-  login(email, password) {
-    // In a real app, this hits an API.
-    // For v1 simulation, we'll assign roles based on email domain/keyword
-    
-    let role = 'JUNIOR'; // Default role
-    
+  // Login via Supabase
+  async login(email, password) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+    if (error) throw error;
+    return data.user;
+  },
+  
+  // Signup via Supabase
+  async signup(name, email, password) {
+    // Determine initial role via domain check if admin/senior logic applies
+    // as per previous hardcoded logic, OR default to JUNIOR.
+    let role = 'JUNIOR';
     if (email.includes('admin')) {
       role = 'ADMIN';
     } else if (email.includes('senior') || email.includes('researcher')) {
       role = 'SENIOR';
     }
-    
-    const user = {
-      id: 'u_' + Date.now(),
-      name: email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' '),
+
+    const { data, error } = await supabase.auth.signUp({
       email: email,
-      role: role,
-      token: 'simulated_token_' + Date.now()
-    };
+      password: password,
+      options: {
+        data: {
+          full_name: name,
+          role: role
+        }
+      }
+    });
     
-    localStorage.setItem(this.KEY, JSON.stringify(user));
-    return user;
-  },
-  
-  // Signup simulated
-  signup(name, email, password) {
-    // New signups ALWAYS default to JUNIOR as per Master Prompt constraint
-    const user = {
-      id: 'u_' + Date.now(),
-      name: name,
-      email: email,
-      role: 'JUNIOR',
-      token: 'simulated_token_' + Date.now()
-    };
-    
-    localStorage.setItem(this.KEY, JSON.stringify(user));
-    return user;
+    if (error) throw error;
+    return data.user;
   },
   
   // Logout
-  logout() {
-    localStorage.removeItem(this.KEY);
-    window.location.href = '/index.html';
+  async logout() {
+    await supabase.auth.signOut();
+    const prefix = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/admin/') ? '../' : './';
+    window.location.href = prefix + 'index.html';
   },
   
   // Check auth & redirect if not logged in
-  requireAuth() {
-    const user = this.getUser();
-    // Assuming we might be in /pages/ or /admin/
-    const isLocal = window.location.href.includes('file://');
-    let loginPath = 'login.html';
+  async requireAuth() {
+    const user = await this.getUser();
     
+    let loginPath = 'login.html';
     if (window.location.pathname.includes('/admin/')) {
        loginPath = '../pages/login.html';
     } else if (window.location.pathname === '/' || window.location.pathname.endsWith('index.html') && !window.location.pathname.includes('/admin/')) {
@@ -86,12 +78,13 @@ const AuthStore = {
   
   // Role based redirect helper
   redirectBasedOnRole(user) {
-    // Adjust paths depending on where we are
     const prefix = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/admin/') ? '../' : './';
     
-    if (user.role === 'ADMIN') {
+    const role = user?.user_metadata?.role || 'JUNIOR';
+    
+    if (role === 'ADMIN') {
       window.location.href = prefix + 'admin/index.html';
-    } else if (user.role === 'SENIOR') {
+    } else if (role === 'SENIOR') {
       window.location.href = prefix + 'pages/senior-submit.html';
     } else {
       window.location.href = prefix + 'pages/junior-dashboard.html';
@@ -99,7 +92,7 @@ const AuthStore = {
   }
 };
 
-// Expose globally
+// Global expose for inline scripts (only in modules context)
 window.AuthStore = AuthStore;
 
 // Logic for Login/Signup forms if they exist on the page
@@ -109,34 +102,51 @@ document.addEventListener('DOMContentLoaded', () => {
   const logoutBtns = document.querySelectorAll('.logout-btn');
   
   if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      
-      const user = AuthStore.login(email, password);
-      AuthStore.redirectBasedOnRole(user);
+      const btn = loginForm.querySelector('button[type="submit"]');
+      btn.textContent = "Logging in...";
+      btn.disabled = true;
+
+      try {
+        const user = await AuthStore.login(email, password);
+        AuthStore.redirectBasedOnRole(user);
+      } catch (err) {
+        alert("Login failed: " + err.message);
+        btn.textContent = "Login";
+        btn.disabled = false;
+      }
     });
   }
   
   if (signupForm) {
-    signupForm.addEventListener('submit', (e) => {
+    signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      
-      const user = AuthStore.signup(name, email, password);
-      // Signup always goes to junior dashboard
-      AuthStore.redirectBasedOnRole(user);
+      const btn = signupForm.querySelector('button[type="submit"]');
+      btn.textContent = "Creating Account...";
+      btn.disabled = true;
+
+      try {
+        const user = await AuthStore.signup(name, email, password);
+        AuthStore.redirectBasedOnRole(user);
+      } catch (err) {
+        alert("Signup failed: " + err.message);
+        btn.textContent = "Create Account";
+        btn.disabled = false;
+      }
     });
   }
   
   if (logoutBtns.length > 0) {
     logoutBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.preventDefault();
-        AuthStore.logout();
+        await AuthStore.logout();
       });
     });
   }

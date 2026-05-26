@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock Tests | AgriSeniorJuniorGuide</title>
+  
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="sidebar">
+      <div class="dashboard-sidebar__header">
+        <a href="../index.html" class="logo">
+          <div class="logo__icon" style="width: 28px; height: 28px;">
+            <i data-lucide="leaf" style="width: 16px; height: 16px;"></i>
+          </div>
+          <div class="logo__text" style="font-size: 16px;">Agri<span>SJ</span>Guide</div>
+        </a>
+      </div>
+      
+      <nav class="dashboard-sidebar__nav">
+        <div class="dashboard-sidebar__section-title">Dashboard</div>
+        <a href="junior-dashboard.html" class="dashboard-sidebar__link"><i data-lucide="layout-dashboard"></i> Overview</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">My Learning</div>
+        <a href="courses.html" class="dashboard-sidebar__link"><i data-lucide="play-circle"></i> Browse Courses</a>
+        <a href="test-list.html" class="dashboard-sidebar__link active"><i data-lucide="check-square"></i> Take a Test</a>
+        <a href="junior-dashboard.html#submit-assignment-section" class="dashboard-sidebar__link"><i data-lucide="upload-cloud"></i> Submit Assignment</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">Networking</div>
+        <a href="network.html" class="dashboard-sidebar__link"><i data-lucide="users"></i> Find a Senior</a>
+      </nav>
+
+      <div class="dashboard-sidebar__footer">
+        <div class="dashboard-sidebar__user">
+          <div class="avatar avatar--sm" id="user-initials">J</div>
+          <div class="dashboard-sidebar__user-info">
+            <div class="dashboard-sidebar__user-name" id="user-name">Junior Student</div>
+            <div class="dashboard-sidebar__user-role text-muted">Junior</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="flex items-center gap-2">
+          <h1 class="dashboard-topbar__title">Mock Tests</h1>
+        </div>
+      </header>
+
+      <div class="dashboard-content container">
+        <div id="tests-container" class="grid-2">
+          <div class="empty-state" style="grid-column: 1 / -1;">
+             <div class="spinner mx-auto mb-2"></div>
+             Loading tests...
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { AuthStore } from '../js/auth.js';
+    import { supabase } from '../js/supabase.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Auth check
+      const user = await AuthStore.requireAuth();
+      if (!user) return;
+      
+      const role = user.user_metadata?.role || 'JUNIOR';
+
+      if (role !== 'JUNIOR') {
+        AuthStore.redirectBasedOnRole(user);
+        return;
+      }
+      
+      // Update UI
+      const nameEl = document.getElementById('user-name');
+      const initialsEl = document.getElementById('user-initials');
+      if (nameEl) nameEl.textContent = user.user_metadata.full_name || user.email;
+      if (initialsEl) initialsEl.textContent = (user.user_metadata.full_name || user.email).charAt(0).toUpperCase();
+
+      lucide.createIcons();
+
+      // Fetch Tests
+      try {
+        const { data: tests, error } = await supabase
+          .from('tests')
+          .select('*')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const container = document.getElementById('tests-container');
+        
+        if (!tests || tests.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1; padding: var(--space-6);">
+              <i data-lucide="check-square" class="empty-state__icon" style="width: 48px; height: 48px; margin-bottom: 16px;"></i>
+              <h3 class="empty-state__title">No active tests right now</h3>
+              <p class="empty-state__text">Check back later for new ICAR pattern grand tests and unit tests.</p>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+
+        let html = '';
+        tests.forEach(test => {
+          html += `
+            <div class="card card--elevated">
+              <div class="card__header">
+                <div>
+                  <div class="badge badge--crash mb-2">${test.subject || 'General Agriculture'}</div>
+                  <h3 class="card__title">${test.title}</h3>
+                </div>
+              </div>
+              <div class="card__body text-sm text-muted">
+                <div class="flex items-center gap-1 mb-1"><i data-lucide="clock" style="width: 14px; height: 14px;"></i> Duration: ${test.duration_minutes || 60} mins</div>
+                <div class="flex items-center gap-1"><i data-lucide="help-circle" style="width: 14px; height: 14px;"></i> Pattern: +4 / -1 ICAR Standard</div>
+              </div>
+              <div class="card__footer">
+                <a href="test.html?id=${test.id}" class="btn btn--primary btn--full">Start Test</a>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+        lucide.createIcons();
+
+      } catch (err) {
+        console.error("Tests fetch error:", err);
+      }
+    });
+  </script>
+</body>
+</html>

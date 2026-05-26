@@ -1,8 +1,10 @@
 /* ==========================================================================
    AgriSeniorJuniorGuide — Courses & Toppers Module
    Handles rendering the courses grid, topper vault, YouTube embeds,
-   and honest empty states based on APP_DATA.
+   and honest empty states based on Supabase Data.
    ========================================================================== */
+
+import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   initCourses();
@@ -11,13 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ── Courses Module ──────────────────────────────────────────────────────── */
-function initCourses() {
+async function initCourses() {
   const container = document.getElementById('courses-container');
   const filtersContainer = document.getElementById('course-filters');
   
-  if (!container || !window.APP_DATA) return;
-  
-  const courses = window.APP_DATA.courses || [];
+  if (!container) return;
   
   // 1. Setup Filters
   if (filtersContainer) {
@@ -29,55 +29,108 @@ function initCourses() {
       <button class="chip" data-filter="plant_pathology">Plant Pathology</button>
     `;
     
-    // Add click listeners to chips (UI only for now, since it's empty)
     const chips = filtersContainer.querySelectorAll('.chip');
     chips.forEach(chip => {
       chip.addEventListener('click', () => {
         chips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
+        // We could re-fetch or filter DOM elements here.
       });
     });
   }
 
-  // 2. Render Courses or Empty State
-  if (courses.length === 0) {
-    // HONEST EMPTY STATE
-    container.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <i data-lucide="book-dashed" class="empty-state__icon"></i>
-        <h3 class="empty-state__title">Courses Uploading Soon</h3>
-        <p class="empty-state__text">
-          Seniors are currently recording specialized crash courses and full syllabus modules. Check back shortly to be the first junior to join.
-        </p>
-      </div>
-    `;
-    return;
+  try {
+    const { data: courses, error } = await supabase
+      .from('courses')
+      .select('*')
+      .eq('status', 'published');
+
+    if (error) throw error;
+
+    // 2. Render Courses or Empty State
+    if (!courses || courses.length === 0) {
+      // HONEST EMPTY STATE
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <i data-lucide="book-dashed" class="empty-state__icon"></i>
+          <h3 class="empty-state__title">Courses Uploading Soon</h3>
+          <p class="empty-state__text">
+            Seniors are currently recording specialized crash courses and full syllabus modules. Check back shortly to be the first junior to join.
+          </p>
+        </div>
+      `;
+      if (window.lucide) window.lucide.createIcons();
+      return;
+    }
+    
+    // Render actual courses if they exist
+    let html = '';
+    courses.forEach(course => {
+      html += `
+        <div class="card course-card">
+          <div class="course-card__content">
+            <h3 class="course-card__title">${course.title}</h3>
+            <p class="text-sm text-muted">${course.subject} • ${course.duration}</p>
+            <p class="mt-2 text-sm">${course.description || ''}</p>
+            <button class="btn btn--primary btn--sm mt-3" onclick="window.openVideo('${course.youtube_url}', '${course.title.replace(/'/g, "\\'")}')">Watch Now</button>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+    
+  } catch (err) {
+    console.error("Error fetching courses:", err);
+    container.innerHTML = `<p class="text-error" style="grid-column: 1 / -1;">Failed to load courses.</p>`;
   }
-  
-  // If there were courses, we would map over them and generate HTML here.
-  // Not implementing the map right now because data.js explicitly has 0 courses.
 }
 
 /* ── Topper Vault Module ─────────────────────────────────────────────────── */
-function initToppers() {
+async function initToppers() {
   const container = document.getElementById('toppers-container');
   
-  if (!container || !window.APP_DATA) return;
+  if (!container) return;
   
-  const toppers = window.APP_DATA.toppers || [];
-  
-  if (toppers.length === 0) {
-    // HONEST EMPTY STATE
-    container.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <i data-lucide="video" class="empty-state__icon"></i>
-        <h3 class="empty-state__title">Interviews Coming Soon</h3>
-        <p class="empty-state__text">
-          We are compiling strategy interviews with top rankers from the latest ICAR JRF cycle.
-        </p>
-      </div>
-    `;
-    return;
+  try {
+    const { data: toppers, error } = await supabase
+      .from('submissions')
+      .select('*')
+      .eq('content_type', 'topper')
+      .eq('status', 'published');
+
+    if (error) throw error;
+
+    if (!toppers || toppers.length === 0) {
+      // HONEST EMPTY STATE
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <i data-lucide="video" class="empty-state__icon"></i>
+          <h3 class="empty-state__title">Interviews Coming Soon</h3>
+          <p class="empty-state__text">
+            We are compiling strategy interviews with top rankers from the latest ICAR JRF cycle.
+          </p>
+        </div>
+      `;
+      if (window.lucide) window.lucide.createIcons();
+      return;
+    }
+
+    let html = '';
+    toppers.forEach(topper => {
+      html += `
+        <div class="card topper-card">
+          <div class="topper-card__content">
+            <h3 class="topper-card__title">${topper.title}</h3>
+            <p class="mt-2 text-sm">${topper.description || ''}</p>
+            <button class="btn btn--primary btn--sm mt-3" onclick="window.openVideo('${topper.youtube_url}', '${topper.title.replace(/'/g, "\\'")}')">Watch Interview</button>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+
+  } catch (err) {
+    console.error("Error fetching toppers:", err);
   }
 }
 

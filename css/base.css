@@ -189,6 +189,27 @@ p {
   color: var(--color-charcoal);
 }
 
+.text-success {
+  color: var(--color-success);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+/* Width / margin helpers */
+.w-full { width: 100%; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.mr-3 { margin-right: var(--space-3); }
+.ml-2 { margin-left: var(--space-2); }
+.mb-6 { margin-bottom: var(--space-6); }
+.pt-3 { padding-top: var(--space-3); }
+.border-t { border-top: 1px solid var(--color-border); }
+
 /* Section header pattern */
 .section-header {
   text-align: center;

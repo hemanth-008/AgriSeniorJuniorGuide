@@ -29,15 +29,15 @@
       
       <nav class="dashboard-sidebar__nav">
         <div class="dashboard-sidebar__section-title">Dashboard</div>
-        <a href="#" class="dashboard-sidebar__link active"><i data-lucide="layout-dashboard"></i> Overview</a>
+        <a href="junior-dashboard.html" class="dashboard-sidebar__link active"><i data-lucide="layout-dashboard"></i> Overview</a>
         
         <div class="dashboard-sidebar__section-title mt-3">My Learning</div>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="play-circle"></i> My Courses</a>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="check-square"></i> My Tests</a>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="bar-chart-2"></i> Performance</a>
+        <a href="courses.html" class="dashboard-sidebar__link"><i data-lucide="play-circle"></i> Browse Courses</a>
+        <a href="test-list.html" class="dashboard-sidebar__link"><i data-lucide="check-square"></i> Take a Test</a>
+        <a href="#submit-assignment-section" class="dashboard-sidebar__link"><i data-lucide="upload-cloud"></i> Submit Assignment</a>
         
         <div class="dashboard-sidebar__section-title mt-3">Networking</div>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="users"></i> Mentor Requests</a>
+        <a href="network.html" class="dashboard-sidebar__link"><i data-lucide="users"></i> Find a Senior</a>
       </nav>
 
       <div class="dashboard-sidebar__footer">
@@ -55,11 +55,6 @@
     <main class="dashboard-main">
       <header class="dashboard-topbar">
         <div class="flex items-center gap-2">
-          <button class="hamburger" id="mobile-sidebar-btn" style="display: none;">
-            <span class="hamburger__line"></span>
-            <span class="hamburger__line"></span>
-            <span class="hamburger__line"></span>
-          </button>
           <h1 class="dashboard-topbar__title">Junior Overview</h1>
         </div>
         <div class="dashboard-topbar__actions">
@@ -69,50 +64,67 @@
 
       <div class="dashboard-content container">
         
-        <div class="dashboard-stats">
-          <div class="dashboard-stat-card">
-            <div class="dashboard-stat-card__label">Courses Enrolled</div>
-            <div class="dashboard-stat-card__value">0</div>
-          </div>
+        <div class="dashboard-stats mb-4">
           <div class="dashboard-stat-card">
             <div class="dashboard-stat-card__label">Tests Completed</div>
-            <div class="dashboard-stat-card__value">0</div>
+            <div class="dashboard-stat-card__value" id="stat-tests">0</div>
           </div>
           <div class="dashboard-stat-card">
             <div class="dashboard-stat-card__label">Avg Score</div>
-            <div class="dashboard-stat-card__value">--</div>
-          </div>
-          <div class="dashboard-stat-card">
-            <div class="dashboard-stat-card__label">Mentor Connections</div>
-            <div class="dashboard-stat-card__value">0</div>
+            <div class="dashboard-stat-card__value" id="stat-score">--</div>
           </div>
         </div>
 
+        <!-- Quick Actions -->
+        <h2 class="mb-3 text-lg">Quick Actions</h2>
+        <div class="grid-4 mb-4">
+          <a href="courses.html" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+            <i data-lucide="play-circle" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
+            <h3 class="card__title">Browse Courses</h3>
+          </a>
+          <a href="test-list.html" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+            <i data-lucide="check-square" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
+            <h3 class="card__title">Take a Test</h3>
+          </a>
+          <a href="network.html" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+            <i data-lucide="users" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
+            <h3 class="card__title">Find a Senior Mentor</h3>
+          </a>
+          <a href="#submit-assignment-section" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+            <i data-lucide="upload-cloud" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
+            <h3 class="card__title">Submit Assignment</h3>
+          </a>
+        </div>
+
         <div class="grid-2">
-          <!-- Upcoming Tests -->
+          <!-- Mentor Requests -->
           <section class="dashboard-section">
             <div class="dashboard-section__header">
-              <h2 class="dashboard-section__title">Upcoming Tests</h2>
-              <a href="#tests" class="text-sm text-primary">View all</a>
+              <h2 class="dashboard-section__title">My Mentor Requests</h2>
             </div>
-            <div class="dashboard-section__body">
-              <div class="empty-state" style="padding: var(--space-2);">
-                <i data-lucide="calendar-x" class="empty-state__icon" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
-                <p class="empty-state__text">No tests scheduled at the moment.</p>
+            <div class="dashboard-section__body" id="mentor-requests-container" style="padding: 0;">
+              <div class="empty-state">
+                <div class="spinner mx-auto mb-2"></div>
+                Loading requests...
               </div>
             </div>
           </section>
 
-          <!-- Recent Activity -->
-          <section class="dashboard-section">
+          <!-- Assignment Upload -->
+          <section class="dashboard-section" id="submit-assignment-section">
             <div class="dashboard-section__header">
-              <h2 class="dashboard-section__title">Recent Activity</h2>
+              <h2 class="dashboard-section__title">Submit Assignment</h2>
             </div>
             <div class="dashboard-section__body">
-              <div class="empty-state" style="padding: var(--space-2);">
-                <i data-lucide="activity" class="empty-state__icon" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
-                <p class="empty-state__text">Start learning to see your activity here.</p>
-              </div>
+              <form id="assignment-form" class="mt-2">
+                <div class="form-group">
+                  <label class="form-label" for="assignment-file">Upload PDF Document</label>
+                  <input type="file" id="assignment-file" accept=".pdf" class="form-input" required>
+                  <div class="form-help">Max size: 5MB. PDF only.</div>
+                </div>
+                <button type="submit" id="btn-upload" class="btn btn--primary w-full mt-3">Upload Assignment</button>
+                <div id="upload-status" class="mt-2 text-sm"></div>
+              </form>
             </div>
           </section>
         </div>
@@ -121,15 +133,26 @@
     </main>
   </div>
 
-  <script src="../js/auth.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Auth check
-      const user = AuthStore.requireAuth();
+  <script type="module">
+    import { AuthStore } from '../js/auth.js';
+    import { supabase } from '../js/supabase.js';
+
+    // Make supabase globally accessible for console debugging as requested
+    window.supabase = supabase;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('Dashboard loaded, checking auth...');
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('User:', session?.user?.email ?? 'NOT LOGGED IN');
+
+      // 1. Auth check via AuthStore
+      const user = await AuthStore.requireAuth();
       if (!user) return;
       
+      const role = user.user_metadata?.role || 'JUNIOR';
+
       // Ensure Junior
-      if (user.role !== 'JUNIOR') {
+      if (role !== 'JUNIOR') {
         AuthStore.redirectBasedOnRole(user);
         return;
       }
@@ -137,10 +160,134 @@
       // Update UI
       const nameEl = document.getElementById('user-name');
       const initialsEl = document.getElementById('user-initials');
-      if (nameEl) nameEl.textContent = user.name;
-      if (initialsEl) initialsEl.textContent = user.name.charAt(0).toUpperCase();
+      if (nameEl) nameEl.textContent = user.user_metadata.full_name || user.email;
+      if (initialsEl) initialsEl.textContent = (user.user_metadata.full_name || user.email).charAt(0).toUpperCase();
 
       lucide.createIcons();
+
+      // Fetch Stats
+      try {
+        const { data: attempts, error } = await supabase
+          .from('test_attempts')
+          .select('score')
+          .eq('junior_id', session.user.id);
+
+        if (error) throw error;
+        
+        if (attempts && attempts.length > 0) {
+          document.getElementById('stat-tests').textContent = attempts.length;
+          const totalScore = attempts.reduce((sum, att) => sum + (att.score || 0), 0);
+          document.getElementById('stat-score').textContent = Math.round(totalScore / attempts.length);
+        }
+      } catch(e) { console.error("Error fetching stats:", e); }
+
+      // Fetch Mentor Requests
+      try {
+        const reqContainer = document.getElementById('mentor-requests-container');
+        // Fetch requests and join with profiles to get the senior's details
+        // Note: this assumes a relation or we fetch separately. For simplicity and robustness, we fetch requests then profiles manually if no FK setup exists.
+        const { data: requests, error: reqErr } = await supabase
+          .from('mentor_requests')
+          .select('*')
+          .eq('junior_id', session.user.id);
+        
+        if (reqErr) throw reqErr;
+
+        if (!requests || requests.length === 0) {
+          reqContainer.innerHTML = `
+            <div class="empty-state" style="padding: var(--space-4);">
+              <i data-lucide="users" class="empty-state__icon" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+              <p class="empty-state__text">You haven't sent any mentor requests yet.</p>
+              <a href="network.html" class="btn btn--primary btn--sm mt-3">Find a Mentor</a>
+            </div>
+          `;
+        } else {
+          // Manually get senior profiles to avoid complex FK assumptions in the raw prompt
+          const seniorIds = requests.map(r => r.senior_id);
+          const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', seniorIds);
+          
+          let html = '';
+          requests.forEach(req => {
+            const senior = profiles?.find(p => p.id === req.senior_id);
+            const seniorName = senior?.full_name || 'Senior Mentor';
+            const seniorEmail = senior?.email || 'N/A';
+            
+            let badgeClass = 'badge--warning';
+            if(req.status === 'accepted') badgeClass = 'badge--success';
+            if(req.status === 'declined') badgeClass = 'badge--error';
+
+            html += `
+              <div class="content-item" style="border-bottom: 1px solid var(--color-border); padding: 16px;">
+                <div class="content-item__info">
+                  <div class="content-item__title">Request to: ${seniorName}</div>
+                  ${req.status === 'accepted' ? `<div class="text-sm mt-1">Contact: <a href="mailto:${seniorEmail}" class="text-primary">${seniorEmail}</a></div>` : ''}
+                </div>
+                <div class="content-item__actions">
+                  <span class="badge ${badgeClass}">${req.status || 'pending'}</span>
+                </div>
+              </div>
+            `;
+          });
+          reqContainer.innerHTML = html;
+        }
+        lucide.createIcons();
+      } catch (e) {
+        console.error("Error fetching mentor requests:", e);
+        document.getElementById('mentor-requests-container').innerHTML = `<div class="p-3 text-error">Error loading requests.</div>`;
+      }
+
+      // Assignment Upload
+      const assignForm = document.getElementById('assignment-form');
+      const assignFile = document.getElementById('assignment-file');
+      const btnUpload = document.getElementById('btn-upload');
+      const uploadStatus = document.getElementById('upload-status');
+
+      assignForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = assignFile.files[0];
+        if (!file) return;
+
+        btnUpload.disabled = true;
+        btnUpload.textContent = 'Uploading...';
+        uploadStatus.textContent = '';
+        uploadStatus.className = 'mt-2 text-sm';
+
+        try {
+          const filePath = `junior_${session.user.id}/${Date.now()}_${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('assignments')
+            .upload(filePath, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: publicUrlData } = supabase.storage
+            .from('assignments')
+            .getPublicUrl(filePath);
+
+          // Use junior_id instead of student_id
+          const { error: dbError } = await supabase
+            .from('assignment_submissions')
+            .insert({
+              junior_id: session.user.id,
+              file_url: publicUrlData.publicUrl,
+              status: 'submitted'
+            });
+
+          if (dbError) throw dbError;
+
+          uploadStatus.textContent = 'Assignment submitted successfully!';
+          uploadStatus.classList.add('text-success');
+          assignForm.reset();
+
+        } catch (err) {
+          console.error("Upload failed", err);
+          uploadStatus.textContent = 'Error: ' + err.message;
+          uploadStatus.classList.add('text-error');
+        } finally {
+          btnUpload.disabled = false;
+          btnUpload.textContent = 'Upload Assignment';
+        }
+      });
     });
   </script>
 </body>

@@ -11,8 +11,73 @@
   <link rel="stylesheet" href="../css/pages.css">
 
   <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    :root {
+      --color-admin-active: #2E7D32;
+    }
+    .dashboard-sidebar__link.active {
+      background: rgba(46, 125, 50, 0.1);
+      color: var(--color-admin-active);
+      border-right: 3px solid var(--color-admin-active);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    @media (max-width: 768px) {
+      .dashboard-sidebar {
+        display: none;
+      }
+      .mobile-tabs {
+        display: flex;
+        overflow-x: auto;
+        background: var(--color-white);
+        border-bottom: 1px solid var(--color-border);
+        padding: 0 var(--space-4);
+      }
+      .mobile-tab-link {
+        padding: var(--space-3);
+        white-space: nowrap;
+        font-weight: 500;
+        color: var(--color-gray-600);
+        text-decoration: none;
+      }
+      .mobile-tab-link.active {
+        color: var(--color-admin-active);
+        border-bottom: 2px solid var(--color-admin-active);
+      }
+    }
+    @media (min-width: 769px) {
+      .mobile-tabs { display: none; }
+    }
+  </style>
 </head>
 <body>
+
+  <!-- SECURITY CHECK FIRST LINE OF SCRIPT (Moved to head for quick execution) -->
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+    window.supabase = supabase;
+
+    async function initAuth() {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+        
+      if (!profile || profile.role.toLowerCase() !== 'admin') {
+        window.location.href = '../index.html';
+      }
+    }
+    initAuth();
+  </script>
 
   <div class="dashboard-layout">
     
@@ -20,149 +85,850 @@
     <aside class="dashboard-sidebar" id="sidebar">
       <div class="dashboard-sidebar__header">
         <a href="../index.html" class="logo">
-          <div class="logo__icon" style="background: var(--color-role-admin); width: 28px; height: 28px;">
-            <i data-lucide="leaf" style="width: 16px; height: 16px;"></i>
+          <div class="logo__icon" style="background: var(--color-admin-active); width: 28px; height: 28px;">
+            <i data-lucide="shield" style="width: 16px; height: 16px; color: white;"></i>
           </div>
-          <div class="logo__text" style="font-size: 16px;">Agri<span>SJ</span>Admin</div>
+          <div class="logo__text" style="font-size: 16px;">Agri<span>Admin</span></div>
         </a>
       </div>
       
       <nav class="dashboard-sidebar__nav">
-        <div class="dashboard-sidebar__section-title">Core</div>
-        <a href="#" class="dashboard-sidebar__link active"><i data-lucide="bar-chart"></i> Overview</a>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="users"></i> Users & Roles</a>
-        
-        <div class="dashboard-sidebar__section-title mt-3">Content Management</div>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="check-square"></i> Pending Approvals</a>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="video"></i> Manage Courses</a>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="file-check"></i> Manage Tests</a>
-        
-        <div class="dashboard-sidebar__section-title mt-3">Settings</div>
-        <a href="#" class="dashboard-sidebar__link"><i data-lucide="settings"></i> Platform Config</a>
+        <a href="#" class="dashboard-sidebar__link active" data-tab="upload"><i data-lucide="upload"></i> Upload Content</a>
+        <a href="#" class="dashboard-sidebar__link" data-tab="submissions"><i data-lucide="inbox"></i> Submissions <span class="badge badge--primary ml-auto" id="nav-sub-count">0</span></a>
+        <a href="#" class="dashboard-sidebar__link" data-tab="tests"><i data-lucide="file-edit"></i> Test Builder</a>
+        <a href="#" class="dashboard-sidebar__link" data-tab="users"><i data-lucide="users"></i> Manage Users</a>
+        <a href="#" class="dashboard-sidebar__link" data-tab="analytics"><i data-lucide="bar-chart"></i> Analytics</a>
       </nav>
-
-      <div class="dashboard-sidebar__footer">
-        <div class="dashboard-sidebar__user">
-          <div class="avatar avatar--sm" id="user-initials" style="background: var(--color-role-admin-bg); color: var(--color-role-admin); border-color: var(--color-role-admin);">A</div>
-          <div class="dashboard-sidebar__user-info">
-            <div class="dashboard-sidebar__user-name" id="user-name">Super Admin</div>
-            <div class="dashboard-sidebar__user-role text-muted" style="color: var(--color-role-admin);">Administrator</div>
-          </div>
-        </div>
-      </div>
     </aside>
 
     <!-- Main Content -->
     <main class="dashboard-main">
       <header class="dashboard-topbar">
         <div class="flex items-center gap-2">
-          <h1 class="dashboard-topbar__title">Admin Command Center</h1>
+          <h1 class="dashboard-topbar__title" id="topbar-title">Upload Content</h1>
         </div>
         <div class="dashboard-topbar__actions">
-          <button class="btn btn--ghost btn--sm logout-btn">Logout</button>
+          <button class="btn btn--ghost btn--sm" id="logout-btn">Logout</button>
         </div>
       </header>
 
-      <div class="dashboard-content container">
+      <!-- Mobile Tabs -->
+      <nav class="mobile-tabs">
+        <a href="#" class="mobile-tab-link active" data-tab="upload">Upload</a>
+        <a href="#" class="mobile-tab-link" data-tab="submissions">Submissions</a>
+        <a href="#" class="mobile-tab-link" data-tab="tests">Tests</a>
+        <a href="#" class="mobile-tab-link" data-tab="users">Users</a>
+        <a href="#" class="mobile-tab-link" data-tab="analytics">Analytics</a>
+      </nav>
+
+      <div class="dashboard-content container pt-4">
         
-        <div class="callout callout--warning mb-4">
-          <div class="callout__title">Admin Notice</div>
-          <p>You have 3 pending content submissions from Seniors that require review before they are visible to Juniors.</p>
+        <!-- ==============================================
+             TAB 1: UPLOAD CONTENT
+             ============================================== -->
+        <div id="tab-upload" class="tab-content active">
+          <div class="grid-2">
+            
+            <!-- YouTube Video Upload -->
+            <div class="card card--elevated">
+              <div class="card__header"><h3 class="card__title">Upload YouTube Video</h3></div>
+              <form id="form-yt">
+                <div class="form-group">
+                  <label class="form-label">Course Title</label>
+                  <input type="text" id="yt-title" class="form-input" required>
+                </div>
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label class="form-label">Subject</label>
+                    <select id="yt-subject" class="form-input" required>
+                      <option value="Agronomy">Agronomy</option>
+                      <option value="Crop Physiology">Crop Physiology</option>
+                      <option value="Soil Science">Soil Science</option>
+                      <option value="Plant Pathology">Plant Pathology</option>
+                      <option value="Genetics">Genetics</option>
+                      <option value="Horticulture">Horticulture</option>
+                      <option value="Agricultural Economics">Agricultural Economics</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Level</label>
+                    <select id="yt-level" class="form-input" required>
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Course Type</label>
+                  <div class="flex gap-4">
+                    <label><input type="radio" name="yt-type" value="Crash Course" checked> Crash Course</label>
+                    <label><input type="radio" name="yt-type" value="Full Syllabus"> Full Syllabus</label>
+                    <label><input type="radio" name="yt-type" value="Live"> Live</label>
+                  </div>
+                </div>
+
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label class="form-label">Instructor Name</label>
+                    <input type="text" id="yt-instructor" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Duration</label>
+                    <input type="text" id="yt-duration" class="form-input" placeholder="e.g. 10 days" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">YouTube URL</label>
+                  <input type="url" id="yt-url" class="form-input" placeholder="https://youtube.com/watch?v=..." required>
+                </div>
+                
+                <div id="yt-preview" class="mb-3 video-wrapper hidden"></div>
+
+                <div class="form-group">
+                  <label class="form-label">Description</label>
+                  <textarea id="yt-desc" class="form-input"></textarea>
+                </div>
+
+                <div class="flex gap-2">
+                  <button type="button" class="btn btn--secondary flex-1" id="btn-yt-draft">Save as Draft</button>
+                  <button type="submit" class="btn btn--primary flex-1" style="background: var(--color-admin-active);">Publish Now</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- PDF Upload -->
+            <div class="card card--elevated">
+              <div class="card__header"><h3 class="card__title">Upload PDF Material</h3></div>
+              <form id="form-pdf">
+                <div class="form-group">
+                  <label class="form-label">Title</label>
+                  <input type="text" id="pdf-title" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Subject</label>
+                  <select id="pdf-subject" class="form-input" required>
+                    <option value="Agronomy">Agronomy</option>
+                    <option value="Crop Physiology">Crop Physiology</option>
+                    <option value="Soil Science">Soil Science</option>
+                    <option value="Plant Pathology">Plant Pathology</option>
+                    <option value="Genetics">Genetics</option>
+                    <option value="Horticulture">Horticulture</option>
+                    <option value="Agricultural Economics">Agricultural Economics</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Description</label>
+                  <textarea id="pdf-desc" class="form-input"></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">PDF File</label>
+                  <input type="file" id="pdf-file" class="form-input" accept="application/pdf" required>
+                  <div class="form-help">Max 25MB.</div>
+                </div>
+                
+                <div id="pdf-progress-container" class="hidden mb-3">
+                  <div style="height: 4px; background: var(--color-gray-200); border-radius: 2px; overflow: hidden;">
+                    <div id="pdf-progress-bar" style="height: 100%; width: 0%; background: var(--color-admin-active); transition: width 0.3s;"></div>
+                  </div>
+                  <div class="text-xs text-muted mt-1" id="pdf-progress-text">Uploading...</div>
+                </div>
+
+                <button type="submit" class="btn btn--primary w-full" style="background: var(--color-admin-active);" id="btn-pdf-upload">Upload PDF</button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card card--elevated mt-4">
+            <div class="card__header"><h3 class="card__title">Manage Existing Content</h3></div>
+            <div class="table-wrapper">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Subject</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="content-tbody">
+                  <tr><td colspan="5" class="text-center"><div class="spinner mx-auto"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
 
-        <div class="dashboard-stats">
-          <div class="dashboard-stat-card">
-            <div class="dashboard-stat-card__label">Total Juniors</div>
-            <div class="dashboard-stat-card__value">0</div>
-          </div>
-          <div class="dashboard-stat-card">
-            <div class="dashboard-stat-card__label">Total Seniors</div>
-            <div class="dashboard-stat-card__value">0</div>
-          </div>
-          <div class="dashboard-stat-card">
-            <div class="dashboard-stat-card__label">Published Courses</div>
-            <div class="dashboard-stat-card__value">0</div>
-          </div>
-          <div class="dashboard-stat-card">
-            <div class="dashboard-stat-card__label">Active Tests</div>
-            <div class="dashboard-stat-card__value">0</div>
+        <!-- ==============================================
+             TAB 2: SUBMISSIONS QUEUE
+             ============================================== -->
+        <div id="tab-submissions" class="tab-content">
+          <div class="card card--elevated">
+            <div class="card__header">
+              <h3 class="card__title">Pending Submissions</h3>
+              <span class="badge badge--warning" id="tab-sub-count">0</span>
+            </div>
+            <div class="table-wrapper mt-3">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Submitted By</th>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Preview</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="queue-tbody">
+                  <tr><td colspan="6" class="text-center"><div class="spinner mx-auto"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <div class="grid-2">
-          <!-- Pending Approvals -->
-          <section class="dashboard-section">
-            <div class="dashboard-section__header">
-              <h2 class="dashboard-section__title">Pending Content Approvals</h2>
-            </div>
-            <div class="dashboard-section__body" style="padding: 0;">
-              
-              <div class="content-item approval-item">
-                <div class="content-item__info">
-                  <div class="content-item__title">Complete Agronomy Crash Course Part 1</div>
-                  <div class="content-item__meta">Submitted by Senior Mentor • Type: Course • YouTube Embed</div>
-                </div>
-                <div class="content-item__actions">
-                  <button class="btn btn--secondary btn--sm" title="Preview"><i data-lucide="eye" style="width: 14px; height: 14px;"></i></button>
-                  <button class="btn btn--primary btn--sm" title="Approve"><i data-lucide="check" style="width: 14px; height: 14px;"></i></button>
-                  <button class="btn btn--danger btn--sm" title="Reject"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
-                </div>
+        <!-- ==============================================
+             TAB 3: TEST BUILDER
+             ============================================== -->
+        <div id="tab-tests" class="tab-content">
+          <div class="grid-2">
+            <!-- Test Creation & Publishing -->
+            <div>
+              <div class="card card--elevated mb-4" id="test-step-1">
+                <div class="card__header"><h3 class="card__title">Step 1: Create Test</h3></div>
+                <form id="form-create-test">
+                  <div class="form-group">
+                    <label class="form-label">Test Title</label>
+                    <input type="text" id="test-title" class="form-input" required>
+                  </div>
+                  <div class="grid-2">
+                    <div class="form-group">
+                      <label class="form-label">Subject</label>
+                      <input type="text" id="test-subject" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Type</label>
+                      <select id="test-type" class="form-input">
+                        <option value="Unit">Unit</option>
+                        <option value="Grand">Grand</option>
+                        <option value="Numerical">Numerical</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="grid-2">
+                    <div class="form-group">
+                      <label class="form-label">Duration (mins)</label>
+                      <input type="number" id="test-duration" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Total Questions</label>
+                      <input type="number" id="test-total-q" class="form-input" required>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn--primary w-full">Create Test</button>
+                </form>
               </div>
 
-              <div class="content-item approval-item">
-                <div class="content-item__info">
-                  <div class="content-item__title">AIR 58 Strategy - Plant Pathology</div>
-                  <div class="content-item__meta">Submitted by Senior Mentor • Type: Topper Video</div>
+              <div class="card card--elevated hidden" id="test-step-3">
+                <div class="card__header"><h3 class="card__title">Step 3: Publish Test</h3></div>
+                <div class="p-3 bg-gray-50 border rounded mb-3">
+                  <strong>Current Test:</strong> <span id="current-test-title"></span><br>
+                  <strong>Questions Added:</strong> <span id="current-test-q-count">0</span>
                 </div>
-                <div class="content-item__actions">
-                  <button class="btn btn--secondary btn--sm" title="Preview"><i data-lucide="eye" style="width: 14px; height: 14px;"></i></button>
-                  <button class="btn btn--primary btn--sm" title="Approve"><i data-lucide="check" style="width: 14px; height: 14px;"></i></button>
-                  <button class="btn btn--danger btn--sm" title="Reject"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
-                </div>
-              </div>
-
-            </div>
-          </section>
-
-          <!-- Recent Signups -->
-          <section class="dashboard-section">
-            <div class="dashboard-section__header">
-              <h2 class="dashboard-section__title">Recent Signups</h2>
-            </div>
-            <div class="dashboard-section__body">
-              <div class="empty-state" style="padding: var(--space-2);">
-                <i data-lucide="users" class="empty-state__icon" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
-                <p class="empty-state__text">No new juniors have signed up today.</p>
+                <button id="btn-publish-test" class="btn btn--success w-full">Publish Test</button>
               </div>
             </div>
-          </section>
+
+            <!-- Question Adder -->
+            <div class="card card--elevated opacity-50" id="test-step-2" style="pointer-events: none;">
+              <div class="card__header"><h3 class="card__title">Step 2: Add Questions</h3></div>
+              <form id="form-add-q">
+                <div class="form-group">
+                  <label class="form-label">Question Text</label>
+                  <textarea id="q-text" class="form-input" required></textarea>
+                </div>
+                <div class="grid-2">
+                  <div class="form-group"><input type="text" id="q-optA" class="form-input" placeholder="Option A" required></div>
+                  <div class="form-group"><input type="text" id="q-optB" class="form-input" placeholder="Option B" required></div>
+                  <div class="form-group"><input type="text" id="q-optC" class="form-input" placeholder="Option C" required></div>
+                  <div class="form-group"><input type="text" id="q-optD" class="form-input" placeholder="Option D" required></div>
+                </div>
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label class="form-label">Correct Answer</label>
+                    <select id="q-correct" class="form-input" required>
+                      <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Difficulty</label>
+                    <select id="q-diff" class="form-input">
+                      <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Explanation</label>
+                  <textarea id="q-exp" class="form-input"></textarea>
+                </div>
+                <button type="submit" class="btn btn--secondary w-full">Add Question</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Existing Tests Table -->
+          <div class="card card--elevated mt-4">
+            <div class="card__header"><h3 class="card__title">Existing Tests</h3></div>
+            <div class="table-wrapper">
+              <table class="table">
+                <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="tests-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==============================================
+             TAB 4: MANAGE USERS
+             ============================================== -->
+        <div id="tab-users" class="tab-content">
+          <div class="card card--elevated">
+            <div class="card__header flex items-center justify-between">
+              <h3 class="card__title m-0">Platform Users</h3>
+              <div class="search-bar" style="max-width: 300px; margin: 0;">
+                <i data-lucide="search" class="search-bar__icon"></i>
+                <input type="text" id="user-search" class="form-input" placeholder="Search name or university...">
+              </div>
+            </div>
+            <div class="table-wrapper mt-3">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>University</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody">
+                  <tr><td colspan="6" class="text-center"><div class="spinner mx-auto"></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==============================================
+             TAB 5: ANALYTICS
+             ============================================== -->
+        <div id="tab-analytics" class="tab-content">
+          <div class="grid-3 mb-4">
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Total Juniors</div>
+              <h2 class="text-3xl text-primary" id="stat-juniors">0</h2>
+            </div>
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Total Seniors</div>
+              <h2 class="text-3xl text-primary" id="stat-seniors">0</h2>
+            </div>
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Published Courses</div>
+              <h2 class="text-3xl text-primary" id="stat-courses">0</h2>
+            </div>
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Tests Taken</div>
+              <h2 class="text-3xl text-primary" id="stat-attempts">0</h2>
+            </div>
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Pending Submissions</div>
+              <h2 class="text-3xl text-primary" id="stat-pending">0</h2>
+            </div>
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Files Uploaded</div>
+              <h2 class="text-3xl text-primary" id="stat-files">0</h2>
+            </div>
+          </div>
         </div>
 
       </div>
     </main>
   </div>
 
-  <script src="../js/auth.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Auth check
-      const user = AuthStore.requireAuth();
-      if (!user) return;
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+    
+    // Core state
+    let activeTestId = null;
+    let questionsAdded = 0;
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+
+      // Logout handler
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = '../index.html';
+      });
+
+      // Tabs Logic
+      const tabs = document.querySelectorAll('.dashboard-sidebar__link, .mobile-tab-link');
+      const contents = document.querySelectorAll('.tab-content');
+      const titleEl = document.getElementById('topbar-title');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = tab.getAttribute('data-tab');
+          
+          tabs.forEach(t => t.classList.remove('active'));
+          // Make both sidebar and mobile tabs active
+          document.querySelectorAll(`[data-tab="${target}"]`).forEach(el => el.classList.add('active'));
+          
+          contents.forEach(c => c.classList.remove('active'));
+          document.getElementById('tab-' + target).classList.add('active');
+          
+          titleEl.textContent = tab.textContent.trim();
+
+          // Load data based on tab
+          if (target === 'upload') loadContentTable();
+          if (target === 'submissions') loadSubmissions();
+          if (target === 'tests') loadTestsTable();
+          if (target === 'users') loadUsers();
+          if (target === 'analytics') loadAnalytics();
+        });
+      });
+
+      // Initialize defaults
+      bindUploadForms();
+      bindTestBuilder();
       
-      // Ensure Admin
-      if (user.role !== 'ADMIN') {
-        AuthStore.redirectBasedOnRole(user);
+      // Load initial data for badge and default tab
+      loadSubCount();
+      loadContentTable();
+    });
+
+    /* --- GLOBALS FOR INLINE ONCLICK --- */
+    window.togglePublish = async (id, table, currentStatus) => {
+      const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+      try {
+        await supabase.from(table).update({ status: newStatus }).eq('id', id);
+        loadContentTable();
+      } catch (e) { alert(e.message); }
+    };
+    
+    window.deleteItem = async (id, table) => {
+      if(!confirm("Are you sure you want to delete this?")) return;
+      try {
+        await supabase.from(table).delete().eq('id', id);
+        loadContentTable();
+        loadTestsTable(); // Re-use for tests
+      } catch (e) { alert(e.message); }
+    };
+
+    window.updateUserRole = async (id) => {
+      const role = document.getElementById(`role-${id}`).value;
+      if(role === 'ADMIN' && !confirm("Promoting to Admin gives full access. Continue?")) {
+        loadUsers(); // Reset
         return;
       }
-      
-      // Update UI
-      const nameEl = document.getElementById('user-name');
-      const initialsEl = document.getElementById('user-initials');
-      if (nameEl) nameEl.textContent = user.name;
-      if (initialsEl) initialsEl.textContent = user.name.charAt(0).toUpperCase();
+      try {
+        await supabase.from('profiles').update({ role: role }).eq('id', id);
+        alert('Role updated successfully.');
+      } catch (e) { alert(e.message); }
+    };
 
-      lucide.createIcons();
+    window.handleSubmission = async (id, action) => {
+      if(action === 'approve') {
+        try {
+          const { data: sub } = await supabase.from('submissions').select('*').eq('id', id).single();
+          if(sub) {
+            if(sub.content_type === 'course') {
+              await supabase.from('courses').insert({
+                title: sub.title,
+                subject: sub.subject,
+                youtube_url: sub.youtube_url,
+                description: sub.description,
+                status: 'published'
+              });
+            } else if(sub.content_type === 'file') {
+               await supabase.from('files').insert({
+                 title: sub.title,
+                 file_url: sub.file_url,
+                 status: 'published'
+               });
+            }
+          }
+          await supabase.from('submissions').update({ status: 'approved' }).eq('id', id);
+          loadSubmissions();
+          loadSubCount();
+        } catch(e) { alert(e.message); }
+      } else {
+        const note = prompt("Reason for rejection:");
+        if(note !== null) {
+          await supabase.from('submissions').update({ status: 'rejected', admin_note: note }).eq('id', id);
+          loadSubmissions();
+          loadSubCount();
+        }
+      }
+    };
+
+    /* --- DATA LOADERS --- */
+    
+    async function loadSubCount() {
+      try {
+        const { count } = await supabase.from('submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending');
+        const c = count || 0;
+        document.getElementById('nav-sub-count').textContent = c;
+        document.getElementById('tab-sub-count').textContent = c;
+      } catch(e) {}
+    }
+
+    async function loadContentTable() {
+      const tbody = document.getElementById('content-tbody');
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center"><div class="spinner mx-auto"></div></td></tr>';
+      
+      try {
+        // Fetch courses
+        const { data: courses } = await supabase.from('courses').select('*').order('created_at', {ascending: false});
+        
+        let html = '';
+        if(courses) {
+          courses.forEach(c => {
+            html += `<tr>
+              <td>${c.title}</td>
+              <td>${c.subject || '-'}</td>
+              <td>Video Course</td>
+              <td><span class="badge ${c.status === 'published' ? 'badge--success' : 'badge--warning'}">${c.status}</span></td>
+              <td>
+                <button class="btn btn--sm btn--secondary" onclick="window.togglePublish('${c.id}', 'courses', '${c.status}')">${c.status === 'published' ? 'Unpublish' : 'Publish'}</button>
+                <button class="btn btn--sm btn--danger" onclick="window.deleteItem('${c.id}', 'courses')">Delete</button>
+              </td>
+            </tr>`;
+          });
+        }
+        
+        // Try fetching files (might fail if table doesn't exist, wrap safely)
+        try {
+          const { data: files } = await supabase.from('files').select('*').order('created_at', {ascending: false});
+          if(files) {
+            files.forEach(f => {
+              html += `<tr>
+                <td>${f.title}</td>
+                <td>-</td>
+                <td>PDF File</td>
+                <td><span class="badge ${f.status === 'published' ? 'badge--success' : 'badge--warning'}">${f.status}</span></td>
+                <td>
+                  <button class="btn btn--sm btn--secondary" onclick="window.togglePublish('${f.id}', 'files', '${f.status}')">${f.status === 'published' ? 'Unpublish' : 'Publish'}</button>
+                  <button class="btn btn--sm btn--danger" onclick="window.deleteItem('${f.id}', 'files')">Delete</button>
+                </td>
+              </tr>`;
+            });
+          }
+        } catch(e) { console.log('Files table query issue', e); }
+
+        tbody.innerHTML = html || '<tr><td colspan="5" class="text-center">No content found</td></tr>';
+      } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-error">Error loading content: ${e.message}</td></tr>`;
+      }
+    }
+
+    async function loadSubmissions() {
+      const tbody = document.getElementById('queue-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner mx-auto"></div></td></tr>';
+      try {
+        const { data: subs } = await supabase.from('submissions').select('*, profiles(full_name)').eq('status', 'pending');
+        
+        if(!subs || subs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No pending submissions</td></tr>';
+          return;
+        }
+
+        let html = '';
+        subs.forEach(s => {
+          const name = s.profiles?.full_name || 'Senior';
+          const link = s.youtube_url || s.file_url || '#';
+          html += `<tr>
+            <td>${name}</td>
+            <td><span class="badge badge--university">${s.content_type}</span></td>
+            <td>${s.title}</td>
+            <td class="text-xs">${new Date(s.created_at).toLocaleDateString()}</td>
+            <td><a href="${link}" target="_blank" class="text-primary text-sm">Preview</a></td>
+            <td>
+              <button class="btn btn--sm btn--success" onclick="window.handleSubmission('${s.id}', 'approve')">Approve</button>
+              <button class="btn btn--sm btn--danger" onclick="window.handleSubmission('${s.id}', 'reject')">Reject</button>
+            </td>
+          </tr>`;
+        });
+        tbody.innerHTML = html;
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-error">Error loading queue.</td></tr>`;
+      }
+    }
+
+    async function loadUsers() {
+      const tbody = document.getElementById('users-tbody');
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="spinner mx-auto"></div></td></tr>';
+      try {
+        let query = supabase.from('profiles').select('*').order('created_at', { ascending: false });
+        
+        const search = document.getElementById('user-search').value.toLowerCase();
+        if (search) {
+          query = query.or(`full_name.ilike.%${search}%,university.ilike.%${search}%`);
+        }
+
+        const { data: users } = await query;
+        if(!users || users.length === 0) {
+           tbody.innerHTML = '<tr><td colspan="6" class="text-center">No users found</td></tr>';
+           return;
+        }
+
+        let html = '';
+        users.forEach(u => {
+          html += `<tr>
+            <td><strong>${u.full_name || 'N/A'}</strong></td>
+            <td class="text-xs text-muted">${u.email || ''}</td>
+            <td class="text-xs">${u.university || '-'}</td>
+            <td>
+              <select class="form-input text-xs py-1 px-2" id="role-${u.id}" onchange="window.updateUserRole('${u.id}')">
+                <option value="JUNIOR" ${u.role==='JUNIOR'?'selected':''}>Junior</option>
+                <option value="SENIOR" ${u.role==='SENIOR'?'selected':''}>Senior</option>
+                <option value="ADMIN" ${u.role==='ADMIN'||u.role==='admin'?'selected':''}>Admin</option>
+              </select>
+            </td>
+            <td class="text-xs">${new Date(u.created_at).toLocaleDateString()}</td>
+            <td><button class="btn btn--sm btn--danger" onclick="window.deleteItem('${u.id}', 'profiles')">Delete</button></td>
+          </tr>`;
+        });
+        tbody.innerHTML = html;
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-error">Error loading users.</td></tr>`;
+      }
+    }
+    
+    document.getElementById('user-search').addEventListener('input', () => {
+      // Debounce basic
+      clearTimeout(window.userSearchTimeout);
+      window.userSearchTimeout = setTimeout(loadUsers, 300);
     });
+
+    async function loadAnalytics() {
+      try {
+        const fetchCount = async (table, filterCol, filterVal) => {
+          let q = supabase.from(table).select('*', { count: 'exact', head: true });
+          if(filterCol) q = q.eq(filterCol, filterVal);
+          const { count } = await q;
+          return count || 0;
+        };
+
+        document.getElementById('stat-juniors').textContent = await fetchCount('profiles', 'role', 'JUNIOR');
+        document.getElementById('stat-seniors').textContent = await fetchCount('profiles', 'role', 'SENIOR');
+        document.getElementById('stat-courses').textContent = await fetchCount('courses', 'status', 'published');
+        document.getElementById('stat-attempts').textContent = await fetchCount('test_attempts');
+        document.getElementById('stat-pending').textContent = await fetchCount('submissions', 'status', 'pending');
+        
+        try {
+          document.getElementById('stat-files').textContent = await fetchCount('files', 'status', 'published');
+        } catch(e) { document.getElementById('stat-files').textContent = 0; }
+
+      } catch (e) { console.error("Analytics error", e); }
+    }
+
+    async function loadTestsTable() {
+      const tbody = document.getElementById('tests-tbody');
+      try {
+        const { data: tests } = await supabase.from('tests').select('*').order('created_at', { ascending: false });
+        if(!tests || tests.length === 0) {
+           tbody.innerHTML = '<tr><td colspan="4" class="text-center">No tests created yet</td></tr>';
+           return;
+        }
+        let html = '';
+        tests.forEach(t => {
+          html += `<tr>
+            <td>${t.title}</td>
+            <td>${t.type || 'General'}</td>
+            <td><span class="badge ${t.status === 'published' ? 'badge--success' : 'badge--warning'}">${t.status}</span></td>
+            <td>
+              <button class="btn btn--sm btn--danger" onclick="window.deleteItem('${t.id}', 'tests')">Delete</button>
+            </td>
+          </tr>`;
+        });
+        tbody.innerHTML = html;
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-error">Error loading tests</td></tr>';
+      }
+    }
+
+    /* --- FORM BINDINGS --- */
+    function bindUploadForms() {
+      // YT Preview
+      document.getElementById('yt-url').addEventListener('input', (e) => {
+        const val = e.target.value;
+        const container = document.getElementById('yt-preview');
+        let vId = '';
+        if(val.includes('v=')) vId = val.split('v=')[1].split('&')[0];
+        else if(val.includes('youtu.be/')) vId = val.split('youtu.be/')[1].split('?')[0];
+        
+        if(vId) {
+          container.innerHTML = `<iframe src="https://www.youtube.com/embed/${vId}" allowfullscreen></iframe>`;
+          container.classList.remove('hidden');
+        } else {
+          container.innerHTML = '';
+          container.classList.add('hidden');
+        }
+      });
+
+      // Submit YT Form
+      document.getElementById('form-yt').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const status = e.submitter.id === 'btn-yt-draft' ? 'draft' : 'published';
+        
+        try {
+          await supabase.from('courses').insert({
+            title: document.getElementById('yt-title').value,
+            subject: document.getElementById('yt-subject').value,
+            youtube_url: document.getElementById('yt-url').value,
+            description: document.getElementById('yt-desc').value,
+            status: status
+          });
+          
+          // Note: Prompt mentions inserting into videos table as well. Assuming fields match.
+          try {
+            await supabase.from('videos').insert({
+              title: document.getElementById('yt-title').value,
+              youtube_url: document.getElementById('yt-url').value,
+              status: status
+            });
+          } catch(err) { console.log('Videos table insert failed, might not exist', err); }
+
+          alert("Course saved successfully!");
+          e.target.reset();
+          document.getElementById('yt-preview').classList.add('hidden');
+          loadContentTable();
+        } catch(err) { alert(err.message); }
+      });
+
+      // Submit PDF Form
+      document.getElementById('form-pdf').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = document.getElementById('pdf-file').files[0];
+        if(!file) return;
+
+        const progressContainer = document.getElementById('pdf-progress-container');
+        const progressBar = document.getElementById('pdf-progress-bar');
+        const progressText = document.getElementById('pdf-progress-text');
+        
+        progressContainer.classList.remove('hidden');
+        progressBar.style.width = '50%';
+        progressText.textContent = 'Uploading to storage...';
+
+        try {
+          const path = `materials/${Date.now()}_${file.name}`;
+          const { error: upErr } = await supabase.storage.from('pdfs').upload(path, file);
+          if(upErr) throw upErr;
+
+          progressBar.style.width = '80%';
+          progressText.textContent = 'Generating link...';
+
+          const { data: urlData } = supabase.storage.from('pdfs').getPublicUrl(path);
+
+          progressBar.style.width = '100%';
+          progressText.textContent = 'Saving database record...';
+
+          await supabase.from('files').insert({
+            title: document.getElementById('pdf-title').value,
+            file_url: urlData.publicUrl,
+            status: 'published'
+          });
+
+          progressText.innerHTML = `Success! <a href="${urlData.publicUrl}" target="_blank" class="text-primary">View File</a>`;
+          e.target.reset();
+          loadContentTable();
+        } catch(err) {
+          progressText.textContent = 'Error: ' + err.message;
+          progressText.classList.add('text-error');
+        }
+      });
+    }
+
+    function bindTestBuilder() {
+      // Step 1: Create Test
+      document.getElementById('form-create-test').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+          const { data, error } = await supabase.from('tests').insert({
+            title: document.getElementById('test-title').value,
+            subject: document.getElementById('test-subject').value,
+            type: document.getElementById('test-type').value,
+            duration_minutes: document.getElementById('test-duration').value,
+            status: 'draft'
+          }).select().single();
+
+          if(error) throw error;
+          
+          activeTestId = data.id;
+          questionsAdded = 0;
+          
+          document.getElementById('test-step-1').classList.add('opacity-50');
+          document.getElementById('test-step-1').style.pointerEvents = 'none';
+          
+          document.getElementById('test-step-2').classList.remove('opacity-50');
+          document.getElementById('test-step-2').style.pointerEvents = 'auto';
+          
+          document.getElementById('test-step-3').classList.remove('hidden');
+          document.getElementById('current-test-title').textContent = data.title;
+          
+          loadTestsTable();
+        } catch (e) { alert(e.message); }
+      });
+
+      // Step 2: Add Q
+      document.getElementById('form-add-q').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if(!activeTestId) return;
+
+        const opts = [
+          document.getElementById('q-optA').value,
+          document.getElementById('q-optB').value,
+          document.getElementById('q-optC').value,
+          document.getElementById('q-optD').value
+        ];
+        const correctChar = document.getElementById('q-correct').value;
+        const correctIndex = correctChar.charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
+
+        try {
+          await supabase.from('questions').insert({
+            test_id: activeTestId,
+            question_text: document.getElementById('q-text').value,
+            options: opts,
+            correct_option: opts[correctIndex],
+            explanation: document.getElementById('q-exp').value
+          });
+
+          questionsAdded++;
+          document.getElementById('current-test-q-count').textContent = questionsAdded + ' questions added so far';
+          e.target.reset();
+        } catch (e) { alert(e.message); }
+      });
+
+      // Step 3: Publish
+      document.getElementById('btn-publish-test').addEventListener('click', async () => {
+        if(!activeTestId) return;
+        try {
+          await supabase.from('tests').update({ status: 'published' }).eq('id', activeTestId);
+          alert('Test published successfully!');
+          window.location.reload(); // reset state
+        } catch (e) { alert(e.message); }
+      });
+    }
+
   </script>
 </body>
 </html>

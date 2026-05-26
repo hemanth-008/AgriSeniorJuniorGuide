@@ -2,13 +2,104 @@
    AgriSeniorJuniorGuide — Main App Logic
    Handles global UI (Nav, Mobile Drawer, Modals) and specific sections 
    like Counseling and Partners.
+   Now wired to Supabase for hero stats and auth-aware nav.
    ========================================================================== */
 
-document.addEventListener('DOMContentLoaded', () => {
+import { supabase } from './supabase.js';
+import { AuthStore } from './auth.js';
+
+document.addEventListener('DOMContentLoaded', async () => {
   initNavigation();
   initCounselingSection();
   initPartnersMarquee();
+  await updateNavForAuth();
+  await loadHeroStats();
 });
+
+/* ── Auth-aware Nav ──────────────────────────────────────────────────────── */
+async function updateNavForAuth() {
+  const user = await AuthStore.getUser();
+  const navActions = document.querySelector('.nav-actions');
+  const drawerFooter = document.querySelector('.mobile-drawer__footer');
+
+  if (user) {
+    const role = user.user_metadata?.role || 'JUNIOR';
+    let dashLink = 'pages/junior-dashboard.html';
+    if (role === 'ADMIN') dashLink = 'admin/index.html';
+    else if (role === 'SENIOR') dashLink = 'pages/senior-submit.html';
+
+    if (navActions) {
+      navActions.innerHTML = `
+        <a href="${dashLink}" class="btn btn--ghost">Dashboard</a>
+        <div class="nav-divider"></div>
+        <button class="btn btn--primary logout-nav-btn">Logout</button>
+      `;
+      navActions.querySelector('.logout-nav-btn').addEventListener('click', async () => {
+        await AuthStore.logout();
+      });
+    }
+
+    if (drawerFooter) {
+      drawerFooter.innerHTML = `
+        <a href="${dashLink}" class="btn btn--ghost btn--full">Dashboard</a>
+        <button class="btn btn--primary btn--full logout-nav-btn">Logout</button>
+      `;
+      drawerFooter.querySelector('.logout-nav-btn').addEventListener('click', async () => {
+        await AuthStore.logout();
+      });
+    }
+  }
+  // If not logged in, keep the default Login / Join as Junior buttons
+}
+
+/* ── Hero Stats (Live from Supabase) ─────────────────────────────────────── */
+async function loadHeroStats() {
+  const juniorEl = document.getElementById('stat-juniors');
+  const courseEl = document.getElementById('stat-courses');
+  const seniorEl = document.getElementById('stat-seniors');
+  const testEl = document.getElementById('stat-tests');
+
+  if (!juniorEl) return; // Not on landing page
+
+  try {
+    // Courses count
+    const { count: courseCount } = await supabase
+      .from('courses')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published');
+    if (courseEl) courseEl.textContent = courseCount || 0;
+
+    // Tests count
+    const { count: testCount } = await supabase
+      .from('tests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'published');
+    if (testEl) testEl.textContent = testCount || 0;
+
+    // Profiles count (juniors / seniors)
+    // If profiles table exists, count by role. 
+    // Otherwise these remain at 0 (honest empty state).
+    try {
+      const { count: jCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'JUNIOR');
+      if (juniorEl) juniorEl.textContent = jCount || 0;
+
+      const { count: sCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'SENIOR');
+      if (seniorEl) seniorEl.textContent = sCount || 0;
+    } catch (_) {
+      // profiles table may not exist — leave at 0
+    }
+
+  } catch (err) {
+    console.error("Error loading hero stats:", err);
+    // Leave counters at 0 — honest empty state
+  }
+}
 
 /* ── Navigation & Scroll ─────────────────────────────────────────────────── */
 function initNavigation() {
@@ -18,6 +109,8 @@ function initNavigation() {
   const overlay = document.getElementById('mobile-drawer-overlay');
   const closeBtn = document.getElementById('mobile-drawer-close');
   const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+
+  if (!header || !mobileBtn || !drawer) return;
 
   // Sticky header background on scroll
   window.addEventListener('scroll', () => {
@@ -53,7 +146,7 @@ function initNavigation() {
     document.body.classList.add('drawer-open');
   }
 
-  function closeDrawer() {
+  function closeDrawerFn() {
     drawer.classList.remove('active');
     overlay.classList.remove('active');
     mobileBtn.classList.remove('active');
@@ -62,20 +155,20 @@ function initNavigation() {
 
   mobileBtn.addEventListener('click', () => {
     if (drawer.classList.contains('active')) {
-      closeDrawer();
+      closeDrawerFn();
     } else {
       openDrawer();
     }
   });
 
-  closeBtn.addEventListener('click', closeDrawer);
-  overlay.addEventListener('click', closeDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawerFn);
+  if (overlay) overlay.addEventListener('click', closeDrawerFn);
 
   // Close drawer when clicking a link
   navLinks.forEach(link => {
     link.addEventListener('click', () => {
       if (window.innerWidth < 1024) {
-        closeDrawer();
+        closeDrawerFn();
       }
     });
   });
