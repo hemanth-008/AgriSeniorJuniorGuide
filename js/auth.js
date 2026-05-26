@@ -22,13 +22,34 @@ export const AuthStore = {
       password: password
     });
     if (error) throw error;
+    
+    // Redirect logic
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile) {
+        window.location.href = '../pages/junior-dashboard.html';
+        return;
+      }
+
+      if (profile.role === 'admin' || profile.role === 'ADMIN') {
+        window.location.href = '../admin/index.html';
+      } else if (profile.role === 'senior' || profile.role === 'SENIOR') {
+        window.location.href = '../pages/senior-dashboard.html';
+      } else {
+        window.location.href = '../pages/junior-dashboard.html';
+      }
+    }
     return data.user;
   },
   
   // Signup via Supabase
   async signup(name, email, password) {
-    // Determine initial role via domain check if admin/senior logic applies
-    // as per previous hardcoded logic, OR default to JUNIOR.
     let role = 'JUNIOR';
     if (email.includes('admin')) {
       role = 'ADMIN';
@@ -48,6 +69,30 @@ export const AuthStore = {
     });
     
     if (error) throw error;
+
+    // After signup, we also want to redirect based on the role logic if session exists
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile) {
+        window.location.href = '../pages/junior-dashboard.html';
+        return;
+      }
+
+      if (profile.role === 'admin' || profile.role === 'ADMIN') {
+        window.location.href = '../admin/index.html';
+      } else if (profile.role === 'senior' || profile.role === 'SENIOR') {
+        window.location.href = '../pages/senior-dashboard.html';
+      } else {
+        window.location.href = '../pages/junior-dashboard.html';
+      }
+    }
+
     return data.user;
   },
   
@@ -60,35 +105,48 @@ export const AuthStore = {
   
   // Check auth & redirect if not logged in
   async requireAuth() {
-    const user = await this.getUser();
+    const { data: { session }, error } = await supabase.auth.getSession();
     
     let loginPath = 'login.html';
     if (window.location.pathname.includes('/admin/')) {
-       loginPath = '../pages/login.html';
+       loginPath = '../admin/login.html';
     } else if (window.location.pathname === '/' || window.location.pathname.endsWith('index.html') && !window.location.pathname.includes('/admin/')) {
        loginPath = 'pages/login.html';
     }
     
-    if (!user) {
+    if (error || !session) {
       window.location.href = loginPath;
       return null;
     }
-    return user;
-  },
-  
-  // Role based redirect helper
-  redirectBasedOnRole(user) {
-    const prefix = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/admin/') ? '../' : './';
-    
-    const role = user?.user_metadata?.role || 'JUNIOR';
-    
-    if (role === 'ADMIN') {
-      window.location.href = prefix + 'admin/index.html';
-    } else if (role === 'SENIOR') {
-      window.location.href = prefix + 'pages/senior-submit.html';
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+      
+    // Expose role to the caller if needed
+    const user = session.user;
+    if (profile) {
+       user.role = profile.role?.toLowerCase() || 'junior';
     } else {
-      window.location.href = prefix + 'pages/junior-dashboard.html';
+       user.role = 'junior';
     }
+
+    // Role Enforcement: If they are on the wrong page, kick them to the right one
+    const path = window.location.pathname;
+    const isJuniorPage = path.includes('junior-dashboard.html') || path.includes('courses.html') || path.includes('network.html') || path.includes('test-list.html') || path.includes('test.html');
+    const isSeniorPage = path.includes('senior-dashboard.html') || path.includes('senior-submit.html');
+    
+    if (user.role === 'admin' && !path.includes('admin/index.html')) {
+        window.location.href = '../admin/index.html';
+    } else if (user.role === 'senior' && isJuniorPage) {
+        window.location.href = 'senior-dashboard.html';
+    } else if (user.role === 'junior' && isSeniorPage) {
+        window.location.href = 'junior-dashboard.html';
+    }
+    
+    return user;
   }
 };
 
@@ -111,8 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.disabled = true;
 
       try {
-        const user = await AuthStore.login(email, password);
-        AuthStore.redirectBasedOnRole(user);
+        await AuthStore.login(email, password);
       } catch (err) {
         alert("Login failed: " + err.message);
         btn.textContent = "Login";
@@ -132,8 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.disabled = true;
 
       try {
-        const user = await AuthStore.signup(name, email, password);
-        AuthStore.redirectBasedOnRole(user);
+        await AuthStore.signup(name, email, password);
       } catch (err) {
         alert("Signup failed: " + err.message);
         btn.textContent = "Create Account";
