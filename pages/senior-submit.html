@@ -138,25 +138,51 @@
     import { supabase } from '../js/supabase.js';
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // 1. Auth check
-      const user = await AuthStore.requireAuth();
-      if (!user) return;
-      
-      const role = user.user_metadata?.role || 'JUNIOR';
+      // 1. Auth check — get session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
 
-      // Ensure Senior
-      if (role !== 'SENIOR') {
-        AuthStore.redirectBasedOnRole(user);
+      // 2. Fetch fresh role from profiles table (NEVER trust user_metadata)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, full_name, university, avatar_url')
+        .eq('id', session.user.id)
+        .single();
+
+      const role = (profile?.role || 'junior').toLowerCase();
+
+      // 3. If not senior, redirect to the correct dashboard
+      if (role === 'admin') {
+        window.location.href = '../admin/index.html';
+        return;
+      }
+      if (role === 'junior') {
+        window.location.href = 'junior-dashboard.html';
         return;
       }
       
-      // Update UI
+      // Update UI with profile data
+      const displayName = profile?.full_name || session.user.email;
       const nameEl = document.getElementById('user-name');
       const initialsEl = document.getElementById('user-initials');
-      if (nameEl) nameEl.textContent = user.user_metadata.full_name || user.email;
-      if (initialsEl) initialsEl.textContent = (user.user_metadata.full_name || user.email).charAt(0).toUpperCase();
+      if (nameEl) nameEl.textContent = displayName;
+      if (initialsEl) initialsEl.textContent = displayName.charAt(0).toUpperCase();
 
       lucide.createIcons();
+
+      // Logout handler
+      document.querySelectorAll('.logout-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userProfile');
+          await supabase.auth.signOut();
+          window.location.href = '../index.html';
+        });
+      });
 
       // Form Handling
       const form = document.getElementById('submission-form');
@@ -188,7 +214,7 @@
               description,
               content_type: contentType,
               status: 'pending',
-              user_id: user.id
+              submitted_by: session.user.id
             });
 
           if (error) throw error;

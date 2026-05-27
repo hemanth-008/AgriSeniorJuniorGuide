@@ -18,15 +18,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /* ── Auth-aware Nav ──────────────────────────────────────────────────────── */
 async function updateNavForAuth() {
-  const user = await AuthStore.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
   const navActions = document.querySelector('.nav-actions');
   const drawerFooter = document.querySelector('.mobile-drawer__footer');
 
-  if (user) {
-    const role = user.user_metadata?.role || 'JUNIOR';
+  if (session) {
+    // Fetch fresh role from profiles table
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+
+    const role = (profile?.role || 'junior').toLowerCase();
     let dashLink = 'pages/junior-dashboard.html';
-    if (role === 'ADMIN') dashLink = 'admin/index.html';
-    else if (role === 'SENIOR') dashLink = 'pages/senior-submit.html';
+    if (role === 'admin') dashLink = 'admin/index.html';
+    else if (role === 'senior') dashLink = 'pages/senior-dashboard.html';
 
     if (navActions) {
       navActions.innerHTML = `
