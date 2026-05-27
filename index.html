@@ -258,7 +258,15 @@
           <p class="rank-advisor__subtitle">Explore university options based on rank cutoffs.</p>
           
           <div class="rank-advisor__input-group">
-             <input type="number" class="form-input" id="rank-input" placeholder="Enter Expected AIR...">
+             <input 
+               type="number" 
+               class="form-input" 
+               id="rank-input"
+               min="1" 
+               max="9999"
+               placeholder="Enter your JRF rank (e.g. 58)"
+               onkeydown="return event.key !== '-' && event.key !== 'e'"
+             >
              <button class="btn btn--primary" id="check-rank-btn">Analyze Options</button>
           </div>
 

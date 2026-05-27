@@ -269,10 +269,10 @@ function initCounselingSection() {
   
   if (checkRankBtn && rankInput && resultsContainer && tableBody) {
     checkRankBtn.addEventListener('click', () => {
-      const rank = parseInt(rankInput.value, 10);
-      if (isNaN(rank) || rank <= 0) {
-        alert("Please enter a valid rank.");
-        return;
+      const rank = parseInt(document.getElementById('rank-input').value)
+      if (!rank || rank < 1) {
+        alert('Please enter a valid rank (minimum 1)')
+        return
       }
       
       // Filter universities where general cutoff >= entered rank
