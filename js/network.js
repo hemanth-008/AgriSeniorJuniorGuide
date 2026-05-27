@@ -82,23 +82,60 @@ function showEmptyState(container) {
 
 function initConnectModal() {
   const form = document.getElementById('connect-form');
+  let selectedSeniorId = null;
   
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      // In a real implementation we would insert into a 'mentor_requests' table.
-      // For now, simulate success:
-      alert("Request sent successfully! The senior will review it and reply via email.");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'pages/login.html';
+        return;
+      }
+
+      const subject = document.getElementById('connect-subject').value;
+      const message = document.getElementById('connect-message').value;
+      const btn = form.querySelector('button[type="submit"]');
       
-      // Close modal and reset form
-      window.closeModal('connect-modal-overlay');
-      form.reset();
+      btn.textContent = "Sending...";
+      btn.disabled = true;
+
+      try {
+        const { error } = await supabase
+          .from('mentor_requests')
+          .insert({
+            junior_id: session.user.id,
+            senior_id: selectedSeniorId,
+            message: `[${subject}] ${message}`,
+            status: 'pending'
+          });
+
+        if (error) throw error;
+        
+        alert("Request sent successfully! The senior will review it and reply via email.");
+        window.closeModal('connect-modal-overlay');
+        form.reset();
+      } catch (err) {
+        alert("Failed to send request: " + err.message);
+      } finally {
+        btn.textContent = "Send Request";
+        btn.disabled = false;
+      }
     });
   }
   
   // Attach open modal function to global scope for mentor buttons
-  window.openConnectModal = function(seniorId) {
+  window.openConnectModal = async function(seniorId) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      // Unauthenticated users trying to connect must log in first
+      const prefix = window.location.pathname.includes('/pages/') ? '' : 'pages/';
+      window.location.href = prefix + 'login.html';
+      return;
+    }
+    
+    selectedSeniorId = seniorId;
     window.openModal('connect-modal-overlay');
   };
 }
