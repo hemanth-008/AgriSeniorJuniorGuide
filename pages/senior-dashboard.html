@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Senior Dashboard | AgriSeniorJuniorGuide</title>
+  
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="sidebar">
+      <div class="dashboard-sidebar__header">
+        <a href="../index.html" class="logo">
+          <div class="logo__icon" style="width: 28px; height: 28px;">
+            <i data-lucide="leaf" style="width: 16px; height: 16px;"></i>
+          </div>
+          <div class="logo__text" style="font-size: 16px;">Agri<span>SJ</span>Guide</div>
+        </a>
+      </div>
+      
+      <nav class="dashboard-sidebar__nav">
+        <div class="dashboard-sidebar__section-title">Dashboard</div>
+        <a href="senior-dashboard.html" class="dashboard-sidebar__link active"><i data-lucide="layout-dashboard"></i> Overview</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">My Content</div>
+        <a href="senior-submit.html" class="dashboard-sidebar__link"><i data-lucide="upload"></i> Submit Content</a>
+        <a href="#submissions-section" class="dashboard-sidebar__link"><i data-lucide="file-text"></i> My Submissions</a>
+        
+        <div class="dashboard-sidebar__section-title mt-3">Mentorship</div>
+        <a href="#mentorship-section" class="dashboard-sidebar__link"><i data-lucide="heart-handshake"></i> Mentorship Requests</a>
+      </nav>
+
+      <div class="dashboard-sidebar__footer">
+        <div class="dashboard-sidebar__user">
+          <div class="avatar avatar--sm" id="user-initials">S</div>
+          <div class="dashboard-sidebar__user-info">
+            <div class="dashboard-sidebar__user-name" id="user-name">Senior Mentor</div>
+            <div class="dashboard-sidebar__user-role text-muted">Senior</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="flex items-center gap-2">
+          <h1 class="dashboard-topbar__title">Senior Overview</h1>
+        </div>
+        <div class="dashboard-topbar__actions">
+          <span class="badge badge--success mr-2" style="font-size: 11px; padding: 4px 10px;">SENIOR MENTOR</span>
+          <button class="btn btn--ghost btn--sm logout-btn">Logout</button>
+        </div>
+      </header>
+
+      <div class="dashboard-content container">
+        
+        <!-- Welcome Header -->
+        <div class="card card--elevated mb-4" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: white; padding: var(--space-5);">
+          <h2 id="welcome-text" style="margin: 0; font-size: 20px;">Welcome back!</h2>
+          <p id="welcome-university" style="margin: 4px 0 0; opacity: 0.85; font-size: 14px;"></p>
+        </div>
+
+        <!-- Quick Actions -->
+        <h2 class="mb-3 text-lg">Quick Actions</h2>
+        <div class="grid-4 mb-4">
+          <a href="senior-submit.html" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+            <i data-lucide="upload" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
+            <h3 class="card__title">Submit Content</h3>
+          </a>
+          <a href="#mentorship-section" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+            <i data-lucide="heart-handshake" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
+            <h3 class="card__title">Mentorship Requests</h3>
+          </a>
+          <a href="#submissions-section" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+            <i data-lucide="file-text" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
+            <h3 class="card__title">My Submissions</h3>
+          </a>
+          <a href="#" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+            <i data-lucide="user-cog" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
+            <h3 class="card__title">Edit Profile</h3>
+          </a>
+        </div>
+
+        <div class="grid-2">
+          <!-- Mentorship Requests -->
+          <section class="dashboard-section" id="mentorship-section">
+            <div class="dashboard-section__header">
+              <h2 class="dashboard-section__title">Mentorship Requests</h2>
+              <span class="badge badge--warning" id="request-count">0</span>
+            </div>
+            <div class="dashboard-section__body" id="mentorship-container" style="padding: 0;">
+              <div class="empty-state">
+                <div class="spinner mx-auto mb-2"></div>
+                Loading requests...
+              </div>
+            </div>
+          </section>
+
+          <!-- My Submissions -->
+          <section class="dashboard-section" id="submissions-section">
+            <div class="dashboard-section__header">
+              <h2 class="dashboard-section__title">My Submissions</h2>
+            </div>
+            <div class="dashboard-section__body" id="submissions-container" style="padding: 0;">
+              <div class="empty-state">
+                <div class="spinner mx-auto mb-2"></div>
+                Loading submissions...
+              </div>
+            </div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+
+    window.supabase = supabase;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('Senior Dashboard loaded, checking auth...');
+
+      // 1. Auth check — get session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // 2. Fetch fresh role from profiles table (NEVER trust user_metadata)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, full_name, university, avatar_url')
+        .eq('id', session.user.id)
+        .single();
+
+      const role = (profile?.role || 'junior').toLowerCase();
+
+      // 3. If not senior, redirect to the correct dashboard
+      if (role === 'admin') {
+        window.location.href = '../admin/index.html';
+        return;
+      }
+      if (role === 'junior') {
+        window.location.href = 'junior-dashboard.html';
+        return;
+      }
+
+      // 4. Update UI with profile data
+      const displayName = profile?.full_name || session.user.email;
+      document.getElementById('user-name').textContent = displayName;
+      document.getElementById('user-initials').textContent = displayName.charAt(0).toUpperCase();
+      document.getElementById('welcome-text').textContent = `Welcome back, ${displayName}!`;
+      if (profile?.university) {
+        document.getElementById('welcome-university').textContent = profile.university;
+      }
+
+      lucide.createIcons();
+
+      // 5. Logout handler
+      document.querySelectorAll('.logout-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userProfile');
+          await supabase.auth.signOut();
+          window.location.href = '../index.html';
+        });
+      });
+
+      // 6. Load Mentorship Requests
+      await loadMentorshipRequests(session.user.id);
+
+      // 7. Load My Submissions
+      await loadMySubmissions(session.user.id);
+    });
+
+    async function loadMentorshipRequests(userId) {
+      const container = document.getElementById('mentorship-container');
+      const countBadge = document.getElementById('request-count');
+
+      try {
+        const { data: requests, error } = await supabase
+          .from('mentor_requests')
+          .select('*')
+          .eq('senior_id', userId)
+          .eq('status', 'pending');
+
+        if (error) throw error;
+
+        countBadge.textContent = requests?.length || 0;
+
+        if (!requests || requests.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="padding: var(--space-4);">
+              <i data-lucide="heart-handshake" class="empty-state__icon" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+              <p class="empty-state__text">No pending mentorship requests.</p>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+
+        // Fetch junior profiles for display names
+        const juniorIds = requests.map(r => r.junior_id);
+        const { data: juniorProfiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', juniorIds);
+
+        let html = '';
+        requests.forEach(req => {
+          const junior = juniorProfiles?.find(p => p.id === req.junior_id);
+          const juniorName = junior?.full_name || 'Junior';
+          const dateStr = new Date(req.created_at).toLocaleDateString();
+
+          html += `
+            <div class="content-item" id="request-${req.id}" style="border-bottom: 1px solid var(--color-border); padding: 16px;">
+              <div class="content-item__info">
+                <div class="content-item__title">${juniorName}</div>
+                <div class="text-sm text-muted mt-1">${req.message || 'No message provided'}</div>
+                <div class="text-xs text-muted mt-1">Sent ${dateStr}</div>
+              </div>
+              <div class="content-item__actions flex gap-2 mt-2">
+                <button class="btn btn--sm btn--success" onclick="handleRequest('${req.id}', 'accepted')">Accept</button>
+                <button class="btn btn--sm btn--danger" onclick="handleRequest('${req.id}', 'rejected')">Decline</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+        lucide.createIcons();
+      } catch (e) {
+        console.error("Error loading mentorship requests:", e);
+        container.innerHTML = `<div class="p-3 text-error">Error loading requests.</div>`;
+      }
+    }
+
+    window.handleRequest = async (requestId, newStatus) => {
+      try {
+        const { error } = await supabase
+          .from('mentor_requests')
+          .update({ status: newStatus })
+          .eq('id', requestId);
+
+        if (error) throw error;
+
+        // Remove the card from DOM
+        const card = document.getElementById(`request-${requestId}`);
+        if (card) card.remove();
+
+        // Update count
+        const countBadge = document.getElementById('request-count');
+        const current = parseInt(countBadge.textContent) || 0;
+        countBadge.textContent = Math.max(0, current - 1);
+
+        // If no more cards, show empty state
+        const container = document.getElementById('mentorship-container');
+        if (!container.querySelector('.content-item')) {
+          container.innerHTML = `
+            <div class="empty-state" style="padding: var(--space-4);">
+              <i data-lucide="heart-handshake" class="empty-state__icon" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+              <p class="empty-state__text">No pending mentorship requests.</p>
+            </div>
+          `;
+          lucide.createIcons();
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+      }
+    };
+
+    async function loadMySubmissions(userId) {
+      const container = document.getElementById('submissions-container');
+
+      try {
+        // Fetch from submissions table (senior content submissions)
+        const { data: submissions, error } = await supabase
+          .from('submissions')
+          .select('*')
+          .eq('submitted_by', userId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!submissions || submissions.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state" style="padding: var(--space-4);">
+              <i data-lucide="file-text" class="empty-state__icon" style="width: 32px; height: 32px; margin-bottom: 8px;"></i>
+              <p class="empty-state__text">You haven't submitted any content yet.</p>
+              <a href="senior-submit.html" class="btn btn--primary btn--sm mt-3">Submit Content</a>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+
+        let html = '';
+        submissions.forEach(sub => {
+          let badgeClass = 'badge--warning';
+          let statusText = sub.status || 'pending';
+          if (statusText === 'approved') badgeClass = 'badge--success';
+          if (statusText === 'rejected') badgeClass = 'badge--error';
+
+          const typeLabel = sub.content_type === 'course' ? 'Video' : 'PDF';
+
+          html += `
+            <div class="content-item" style="border-bottom: 1px solid var(--color-border); padding: 16px;">
+              <div class="content-item__info">
+                <div class="content-item__title">${sub.title}</div>
+                <div class="text-xs text-muted mt-1">${typeLabel} · ${new Date(sub.created_at).toLocaleDateString()}</div>
+              </div>
+              <div class="content-item__actions">
+                <span class="badge ${badgeClass}">${statusText}</span>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (e) {
+        console.error("Error loading submissions:", e);
+        container.innerHTML = `<div class="p-3 text-error">Error loading submissions.</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

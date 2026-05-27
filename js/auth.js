@@ -28,7 +28,7 @@ export const AuthStore = {
     if (session) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, full_name, university, avatar_url')
         .eq('id', session.user.id)
         .single();
 
@@ -75,7 +75,7 @@ export const AuthStore = {
     if (session) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, full_name, university, avatar_url')
         .eq('id', session.user.id)
         .single();
 
@@ -98,6 +98,8 @@ export const AuthStore = {
   
   // Logout
   async logout() {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userProfile');
     await supabase.auth.signOut();
     const prefix = window.location.pathname.includes('/pages/') || window.location.pathname.includes('/admin/') ? '../' : './';
     window.location.href = prefix + 'index.html';
@@ -121,7 +123,7 @@ export const AuthStore = {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, full_name, university, avatar_url')
       .eq('id', session.user.id)
       .single();
       
