@@ -533,20 +533,27 @@
     };
 
     window.updateUserRole = async (id) => {
-      const role = document.getElementById(`role-${id}`).value;
-      if(role === 'ADMIN' && !confirm("Promoting to Admin gives full access. Continue?")) {
+      const selectedRole = document.getElementById(`role-${id}`).value;
+      const newRole = selectedRole.toLowerCase().trim();
+
+      if (!['junior', 'senior', 'admin'].includes(newRole)) {
+        alert('Invalid role selected');
+        return;
+      }
+
+      if(newRole === 'admin' && !confirm("Promoting to Admin gives full access. Continue?")) {
         loadUsers(); // Reset
         return;
       }
       try {
-        const { error } = await supabase.from('profiles').update({ role: role }).eq('id', id);
+        const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', id);
         if (error) {
           console.error('Role update failed:', error);
           alert('Failed to update role: ' + error.message);
           return;
         }
         // Only show success AFTER confirming no error
-        alert('Role updated to ' + role + ' successfully');
+        alert('Role updated to ' + newRole + ' successfully');
       } catch (e) {
         console.error('Role update exception:', e);
         alert('Failed to update role: ' + e.message);
@@ -706,9 +713,9 @@
             <td class="text-xs">${u.university || '-'}</td>
             <td>
               <select class="form-input text-xs py-1 px-2" id="role-${u.id}" onchange="window.updateUserRole('${u.id}')">
-                <option value="JUNIOR" ${u.role==='JUNIOR'?'selected':''}>Junior</option>
-                <option value="SENIOR" ${u.role==='SENIOR'?'selected':''}>Senior</option>
-                <option value="ADMIN" ${u.role==='ADMIN'||u.role==='admin'?'selected':''}>Admin</option>
+                <option value="junior" ${(u.role||'').toLowerCase()==='junior'?'selected':''}>Junior</option>
+                <option value="senior" ${(u.role||'').toLowerCase()==='senior'?'selected':''}>Senior</option>
+                <option value="admin" ${(u.role||'').toLowerCase()==='admin'?'selected':''}>Admin</option>
               </select>
             </td>
             <td class="text-xs">${new Date(u.created_at).toLocaleDateString()}</td>
