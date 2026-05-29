@@ -314,7 +314,9 @@
                     <div class="form-group">
                       <label class="form-label">Type</label>
                       <select id="test-type" class="form-input">
-                        <option value="unit">Unit Test (30 Questions, 45 mins)</option>
+                        <option value="unit_30_40">Unit Test (30 Questions, 40 mins)</option>
+                        <option value="unit_40_40">Unit Test (40 Questions, 40 mins)</option>
+                        <option value="unit_45_40">Unit Test (45 Questions, 40 mins)</option>
                         <option value="grand">Grand Test (120 Questions, 2 hrs)</option>
                         <option value="numerical">Numerical Agronomy (Special)</option>
                       </select>
@@ -874,6 +876,22 @@
     }
 
     function bindTestBuilder() {
+      // Auto-fill duration and total questions based on test type
+      document.getElementById('test-type').addEventListener('change', function() {
+        const configs = {
+          'unit_30_40': { questions: 30, duration: 40 },
+          'unit_40_40': { questions: 40, duration: 40 },
+          'unit_45_40': { questions: 45, duration: 40 },
+          'grand':      { questions: 120, duration: 120 },
+          'numerical':  { questions: 30, duration: 40 }
+        };
+        const config = configs[this.value];
+        if (config) {
+          document.getElementById('test-duration').value = config.duration;
+          document.getElementById('test-total-q').value = config.questions;
+        }
+      });
+
       // Step 1: Create Test
       document.getElementById('form-create-test').addEventListener('submit', async (e) => {
         e.preventDefault();
