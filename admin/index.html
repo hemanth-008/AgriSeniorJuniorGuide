@@ -314,9 +314,9 @@
                     <div class="form-group">
                       <label class="form-label">Type</label>
                       <select id="test-type" class="form-input">
-                        <option value="Unit">Unit</option>
-                        <option value="Grand">Grand</option>
-                        <option value="Numerical">Numerical</option>
+                        <option value="unit">Unit Test (30 Questions, 45 mins)</option>
+                        <option value="grand">Grand Test (120 Questions, 2 hrs)</option>
+                        <option value="numerical">Numerical Agronomy (Special)</option>
                       </select>
                     </div>
                   </div>
@@ -878,10 +878,11 @@
       document.getElementById('form-create-test').addEventListener('submit', async (e) => {
         e.preventDefault();
         try {
+          const testType = document.getElementById('test-type').value.toLowerCase().trim();
           const { data, error } = await supabase.from('tests').insert({
             title: document.getElementById('test-title').value,
             subject: document.getElementById('test-subject').value,
-            test_type: document.getElementById('test-type').value,
+            test_type: testType,
             duration_minutes: document.getElementById('test-duration').value,
             status: 'draft'
           }).select().single();
