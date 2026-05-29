@@ -111,7 +111,13 @@
       const nameEl = document.getElementById('user-name');
       const initialsEl = document.getElementById('user-initials');
       if (nameEl) nameEl.textContent = displayName;
-      if (initialsEl) initialsEl.textContent = displayName.charAt(0).toUpperCase();
+      if (initialsEl) {
+        if (profile?.avatar_url) {
+          initialsEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        } else {
+          initialsEl.textContent = displayName.charAt(0).toUpperCase();
+        }
+      }
 
       lucide.createIcons();
 
@@ -141,11 +147,15 @@
 
         let html = '';
         seniors.forEach(senior => {
+          const avatarContent = senior.avatar_url 
+            ? `<img src="${senior.avatar_url}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+            : (senior.full_name ? senior.full_name.charAt(0).toUpperCase() : 'S');
+            
           html += `
             <div class="card card--elevated flex-col justify-between">
               <div>
                 <div class="flex items-center gap-3 mb-3">
-                  <div class="avatar avatar--lg">${senior.full_name ? senior.full_name.charAt(0).toUpperCase() : 'S'}</div>
+                  <div class="avatar avatar--lg">${avatarContent}</div>
                   <div>
                     <h3 class="card__title m-0">${senior.full_name || 'Senior Mentor'}</h3>
                     <div class="badge badge--university mt-1">${senior.university || 'ICAR Institute'}</div>

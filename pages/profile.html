@@ -109,6 +109,22 @@
       color: var(--color-gray-600);
       cursor: not-allowed;
     }
+    
+    .avatar-upload-btn {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: #E8F5E9;
+      color: #2E7D32;
+      border: 1px solid #A5D6A7;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .avatar-upload-btn:hover {
+      background: #A5D6A7;
+    }
   </style>
 </head>
 <body>
@@ -156,8 +172,29 @@
         
         <!-- SECTION 1: Profile Header -->
         <div class="profile-header">
-          <div class="profile-avatar" id="header-initials">U</div>
-          <div class="profile-info flex-1">
+          <div class="avatar-section">
+            <div class="avatar-wrapper" style="display: flex; flex-direction: column; align-items: center;">
+              <img id="avatar-preview" src="" alt="Profile Photo" 
+                style="display:none; width:120px; height:120px; 
+                border-radius:50%; object-fit:cover; border: 4px solid rgba(255, 255, 255, 0.3);">
+              <div id="avatar-initials" 
+                style="width:120px; height:120px; border-radius:50%; 
+                background:#2E7D32; color:white; font-size:48px;
+                display:flex; align-items:center; justify-content:center;
+                border: 4px solid rgba(255, 255, 255, 0.3);">
+              </div>
+              <label for="avatar-upload" class="avatar-upload-btn">
+                📷 Change Photo
+              </label>
+              <input type="file" id="avatar-upload" 
+                accept="image/jpeg, image/png, image/webp"
+                style="display:none">
+              <p style="font-size:12px; color:rgba(255, 255, 255, 0.8); margin-top:8px; margin-bottom:0; text-align:center;">
+                Optional · JPG, PNG or WebP · Max 2MB
+              </p>
+            </div>
+          </div>
+          <div class="profile-info flex-1" style="margin-left: var(--space-4);">
             <h1 id="header-name">Loading...</h1>
             <p id="header-university">University not set</p>
             <span class="badge" id="header-role-badge" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);">Loading Role</span>
@@ -368,7 +405,19 @@
       const displayName = profile.full_name || session.user.email;
       const initial = displayName.charAt(0).toUpperCase();
       
-      document.getElementById('header-initials').textContent = initial;
+      const avatarImg = document.getElementById('avatar-preview');
+      const avatarInitials = document.getElementById('avatar-initials');
+
+      if (profile.avatar_url) {
+        avatarImg.src = profile.avatar_url;
+        avatarImg.style.display = 'block';
+        avatarInitials.style.display = 'none';
+      } else {
+        avatarInitials.textContent = initial || '?';
+        avatarInitials.style.display = 'flex';
+        avatarImg.style.display = 'none';
+      }
+      
       document.getElementById('header-name').textContent = displayName;
       document.getElementById('header-university').textContent = profile.university || 'University not set';
       document.getElementById('header-role-badge').textContent = role.toUpperCase();
@@ -403,6 +452,27 @@
         document.getElementById('linkedin_url').value = profile.linkedin_url || '';
         document.getElementById('available_for_mentorship').checked = profile.available_for_mentorship || false;
       }
+
+      // Preview image before upload
+      document.getElementById('avatar-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate size — max 2MB
+        if (file.size > 2 * 1024 * 1024) {
+          alert('Image too large. Please choose a photo under 2MB.');
+          return;
+        }
+
+        // Show local preview immediately
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('avatar-preview').src = e.target.result;
+          document.getElementById('avatar-preview').style.display = 'block';
+          document.getElementById('avatar-initials').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      });
 
       // Logout handler
       document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -444,6 +514,43 @@
           updates.available_for_mentorship = document.getElementById('available_for_mentorship').checked;
         }
 
+        const avatarFile = document.getElementById('avatar-upload').files[0];
+        let avatarUrl = profile.avatar_url; // keep existing if no new upload
+
+        if (avatarFile) {
+          try {
+            const fileExt = avatarFile.name.split('.').pop();
+            const filePath = `${session.user.id}/avatar.${fileExt}`;
+
+            // Remove old avatar first (ignore error if it doesn't exist)
+            await supabase.storage.from('avatars').remove([filePath]);
+
+            // Upload new avatar
+            const { error: uploadError } = await supabase.storage
+              .from('avatars')
+              .upload(filePath, avatarFile, { upsert: true });
+
+            if (uploadError) {
+              throw new Error('Photo upload failed: ' + uploadError.message);
+            }
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(filePath);
+
+            avatarUrl = urlData.publicUrl;
+          } catch (uploadErr) {
+            console.error(uploadErr);
+            alert(uploadErr.message);
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Profile';
+            return;
+          }
+        }
+        
+        updates.avatar_url = avatarUrl;
+
         try {
           const { error: updateError } = await supabase
             .from('profiles')
@@ -457,7 +564,6 @@
 
           // Update header visually
           document.getElementById('header-name').textContent = updates.full_name;
-          document.getElementById('header-initials').textContent = updates.full_name.charAt(0).toUpperCase();
           document.getElementById('sidebar-name').textContent = updates.full_name;
           document.getElementById('sidebar-initials').textContent = updates.full_name.charAt(0).toUpperCase();
           

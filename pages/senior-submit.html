@@ -166,10 +166,16 @@
       
       // Update UI with profile data
       const displayName = profile?.full_name || session.user.email;
-      const nameEl = document.getElementById('user-name');
+      document.getElementById('user-name').textContent = displayName;
+      
       const initialsEl = document.getElementById('user-initials');
-      if (nameEl) nameEl.textContent = displayName;
-      if (initialsEl) initialsEl.textContent = displayName.charAt(0).toUpperCase();
+      if (initialsEl) {
+        if (profile?.avatar_url) {
+          initialsEl.innerHTML = `<img src="${profile.avatar_url}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+        } else {
+          initialsEl.textContent = displayName.charAt(0).toUpperCase();
+        }
+      }
 
       lucide.createIcons();
 
