@@ -50,20 +50,15 @@ export const AuthStore = {
   
   // Signup via Supabase
   async signup(name, email, password) {
-    let role = 'JUNIOR';
-    if (email.includes('admin')) {
-      role = 'ADMIN';
-    } else if (email.includes('senior') || email.includes('researcher')) {
-      role = 'SENIOR';
-    }
-
+    // All signups default to 'junior'. Role upgrades are admin-only.
+    // NEVER pass role in user_metadata — the DB trigger creates the
+    // profile row with role='junior'. Admin changes role via profiles table.
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
       options: {
         data: {
-          full_name: name,
-          role: role
+          full_name: name
         }
       }
     });

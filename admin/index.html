@@ -539,9 +539,18 @@
         return;
       }
       try {
-        await supabase.from('profiles').update({ role: role }).eq('id', id);
-        alert('Role updated successfully.');
-      } catch (e) { alert(e.message); }
+        const { error } = await supabase.from('profiles').update({ role: role }).eq('id', id);
+        if (error) {
+          console.error('Role update failed:', error);
+          alert('Failed to update role: ' + error.message);
+          return;
+        }
+        // Only show success AFTER confirming no error
+        alert('Role updated to ' + role + ' successfully');
+      } catch (e) {
+        console.error('Role update exception:', e);
+        alert('Failed to update role: ' + e.message);
+      }
     };
 
     window.handleSubmission = async (id, action) => {
