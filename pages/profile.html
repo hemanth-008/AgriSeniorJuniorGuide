@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile | AgriSeniorJuniorGuide</title>
+  
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-5);
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: white;
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-5);
+    }
+    
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--color-white);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: 700;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .profile-info h1 {
+      margin: 0 0 var(--space-1);
+      font-size: 24px;
+    }
+    
+    .profile-info p {
+      margin: 0 0 var(--space-2);
+      opacity: 0.9;
+    }
+    
+    .profile-form-section {
+      background: var(--color-white);
+      padding: var(--space-5);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--space-5);
+    }
+    
+    .profile-form-section h3 {
+      margin-top: 0;
+      margin-bottom: var(--space-4);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--color-gray-200);
+      color: var(--color-charcoal);
+    }
+    
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      cursor: pointer;
+    }
+    
+    .toggle-switch input {
+      display: none;
+    }
+    
+    .slider {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background-color: var(--color-gray-300);
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--color-primary);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    
+    .readonly-field {
+      background-color: var(--color-gray-50);
+      color: var(--color-gray-600);
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="sidebar">
+      <div class="dashboard-sidebar__header">
+        <a href="../index.html" class="logo">
+          <div class="logo__icon" style="width: 28px; height: 28px;">
+            <i data-lucide="leaf" style="width: 16px; height: 16px;"></i>
+          </div>
+          <div class="logo__text" style="font-size: 16px;">Agri<span>SJ</span>Guide</div>
+        </a>
+      </div>
+      
+      <nav class="dashboard-sidebar__nav" id="sidebar-nav">
+        <!-- Injected via JS based on role -->
+      </nav>
+
+      <div class="dashboard-sidebar__footer">
+        <div class="dashboard-sidebar__user">
+          <div class="avatar avatar--sm" id="sidebar-initials">U</div>
+          <div class="dashboard-sidebar__user-info">
+            <div class="dashboard-sidebar__user-name" id="sidebar-name">User</div>
+            <div class="dashboard-sidebar__user-role text-muted" id="sidebar-role">Role</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="flex items-center gap-2">
+          <h1 class="dashboard-topbar__title">My Profile</h1>
+        </div>
+        <div class="dashboard-topbar__actions">
+          <button class="btn btn--ghost btn--sm" id="logout-btn">Logout</button>
+        </div>
+      </header>
+
+      <div class="dashboard-content container container--narrow mx-auto">
+        
+        <!-- SECTION 1: Profile Header -->
+        <div class="profile-header">
+          <div class="profile-avatar" id="header-initials">U</div>
+          <div class="profile-info flex-1">
+            <h1 id="header-name">Loading...</h1>
+            <p id="header-university">University not set</p>
+            <span class="badge" id="header-role-badge" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);">Loading Role</span>
+          </div>
+        </div>
+
+        <form id="profile-form">
+          <!-- SECTION 2: Edit Profile Form -->
+          
+          <!-- Personal Info -->
+          <div class="profile-form-section">
+            <h3>Personal Information</h3>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="full_name">Full Name</label>
+                <input type="text" id="full_name" class="form-input" required>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" class="form-input readonly-field" readonly>
+              </div>
+            </div>
+            
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="phone">Phone Number</label>
+                <input type="text" id="phone" class="form-input" placeholder="Optional">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="university">University</label>
+                <select id="university" class="form-input" required>
+                  <option value="">Select your university...</option>
+                  <option value="IARI New Delhi">IARI New Delhi</option>
+                  <option value="PJTSAU Hyderabad">PJTSAU Hyderabad</option>
+                  <option value="ANGRAU Guntur">ANGRAU Guntur</option>
+                  <option value="OUAT Bhubaneswar">OUAT Bhubaneswar</option>
+                  <option value="TNAU Coimbatore">TNAU Coimbatore</option>
+                  <option value="GBPUAT Pantnagar">GBPUAT Pantnagar</option>
+                  <option value="SKUAST Jammu">SKUAST Jammu</option>
+                  <option value="SKUAST Kashmir">SKUAST Kashmir</option>
+                  <option value="BAU Ranchi">BAU Ranchi</option>
+                  <option value="IGKV Raipur">IGKV Raipur</option>
+                  <option value="JNKVV Jabalpur">JNKVV Jabalpur</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="specialization">Department / Specialization</label>
+                <input type="text" id="specialization" class="form-input" placeholder="e.g. Agronomy, Soil Science" required>
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="year_of_study">Year of Study</label>
+                <select id="year_of_study" class="form-input">
+                  <option value="">Select year...</option>
+                  <option value="1st Year">1st Year</option>
+                  <option value="2nd Year">2nd Year</option>
+                  <option value="Final Year">Final Year</option>
+                  <option value="Graduated">Graduated</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Academic Info -->
+          <div class="profile-form-section">
+            <h3>Academic Background</h3>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="jrf_rank">JRF Rank</label>
+                <input type="text" id="jrf_rank" class="form-input" placeholder="e.g. AIR 58 (leave blank if N/A)">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label" for="jrf_year">JRF Year</label>
+                <input type="text" id="jrf_year" class="form-input" placeholder="e.g. 2024">
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="previous_college">Previous University/College</label>
+              <input type="text" id="previous_college" class="form-input" placeholder="Where did you complete your B.Sc.?">
+            </div>
+          </div>
+
+          <!-- Senior Only Info -->
+          <div class="profile-form-section" id="senior-section" style="display: none;">
+            <h3>Senior Mentorship Profile</h3>
+            
+            <div class="form-group mb-4">
+              <label class="toggle-switch">
+                <input type="checkbox" id="available_for_mentorship">
+                <span class="slider"></span>
+                <span class="font-medium">I am available to mentor juniors</span>
+              </label>
+              <p class="text-sm text-muted mt-1 ml-11">When turned on, your profile will appear in the Mentor Network for juniors to find you.</p>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="research_area">Research Area</label>
+              <input type="text" id="research_area" class="form-input" placeholder="e.g. Integrated Pest Management, Precision Agriculture">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="linkedin_url">LinkedIn Profile URL</label>
+              <input type="url" id="linkedin_url" class="form-input" placeholder="Optional">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="bio">Bio</label>
+              <textarea id="bio" class="form-input" rows="4" maxlength="300" placeholder="Tell juniors about your research, experience and how you can help them..."></textarea>
+              <div class="form-help">Max 300 characters.</div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: Save Button -->
+          <div class="flex items-center gap-3 mb-5">
+            <button type="submit" class="btn btn--primary" id="save-btn" style="background-color: #2E7D32; border-color: #2E7D32;">Save Profile</button>
+            <div id="status-message" class="text-sm font-medium"></div>
+          </div>
+        </form>
+
+        <!-- SECTION 4: Account Info -->
+        <div class="profile-form-section">
+          <h3>Account Information</h3>
+          <div class="grid-2 text-sm">
+            <div>
+              <span class="text-muted">Member since:</span>
+              <strong id="member-since" class="block mt-1">-</strong>
+            </div>
+            <div>
+              <span class="text-muted">Current Role:</span>
+              <strong id="account-role" class="block mt-1">-</strong>
+            </div>
+          </div>
+          <p class="text-xs text-muted mt-4 pt-3 border-t">To change your role or delete your account, please contact the platform admin.</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+
+      // 1. Check Auth & Load Profile
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error || !profile) {
+        console.error("Profile load error", error);
+        alert("Failed to load profile data.");
+        return;
+      }
+
+      const role = (profile.role || 'junior').toLowerCase();
+
+      // 2. Setup Sidebar Nav based on role
+      const sidebarNav = document.getElementById('sidebar-nav');
+      if (role === 'senior') {
+        sidebarNav.innerHTML = `
+          <div class="dashboard-sidebar__section-title">Dashboard</div>
+          <a href="senior-dashboard.html" class="dashboard-sidebar__link"><i data-lucide="layout-dashboard"></i> Overview</a>
+          
+          <div class="dashboard-sidebar__section-title mt-3">My Content</div>
+          <a href="senior-submit.html" class="dashboard-sidebar__link"><i data-lucide="upload"></i> Submit Content</a>
+          <a href="senior-dashboard.html#submissions-section" class="dashboard-sidebar__link"><i data-lucide="file-text"></i> My Submissions</a>
+          
+          <div class="dashboard-sidebar__section-title mt-3">Mentorship</div>
+          <a href="senior-dashboard.html#mentorship-section" class="dashboard-sidebar__link"><i data-lucide="heart-handshake"></i> Mentorship Requests</a>
+          <a href="profile.html" class="dashboard-sidebar__link active"><i data-lucide="user"></i> My Profile</a>
+        `;
+      } else {
+        sidebarNav.innerHTML = `
+          <div class="dashboard-sidebar__section-title">Dashboard</div>
+          <a href="junior-dashboard.html" class="dashboard-sidebar__link"><i data-lucide="layout-dashboard"></i> Overview</a>
+          
+          <div class="dashboard-sidebar__section-title mt-3">My Learning</div>
+          <a href="courses.html" class="dashboard-sidebar__link"><i data-lucide="play-circle"></i> Browse Courses</a>
+          <a href="test-list.html" class="dashboard-sidebar__link"><i data-lucide="check-square"></i> Take a Test</a>
+          
+          <div class="dashboard-sidebar__section-title mt-3">Networking</div>
+          <a href="network.html" class="dashboard-sidebar__link"><i data-lucide="users"></i> Find a Senior</a>
+          <a href="profile.html" class="dashboard-sidebar__link active"><i data-lucide="user"></i> My Profile</a>
+        `;
+      }
+      lucide.createIcons();
+
+      // 3. Pre-fill Header and Sidebar Info
+      const displayName = profile.full_name || session.user.email;
+      const initial = displayName.charAt(0).toUpperCase();
+      
+      document.getElementById('header-initials').textContent = initial;
+      document.getElementById('header-name').textContent = displayName;
+      document.getElementById('header-university').textContent = profile.university || 'University not set';
+      document.getElementById('header-role-badge').textContent = role.toUpperCase();
+      
+      document.getElementById('sidebar-initials').textContent = initial;
+      document.getElementById('sidebar-name').textContent = displayName;
+      document.getElementById('sidebar-role').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+
+      // 4. Pre-fill Form Fields
+      document.getElementById('full_name').value = profile.full_name || '';
+      document.getElementById('email').value = session.user.email;
+      document.getElementById('phone').value = profile.phone || '';
+      document.getElementById('university').value = profile.university || '';
+      document.getElementById('specialization').value = profile.specialization || '';
+      document.getElementById('year_of_study').value = profile.year_of_study || '';
+      document.getElementById('jrf_rank').value = profile.jrf_rank || '';
+      document.getElementById('jrf_year').value = profile.jrf_year || '';
+      document.getElementById('previous_college').value = profile.previous_college || '';
+
+      // Format Date
+      if (profile.created_at) {
+        const date = new Date(profile.created_at);
+        document.getElementById('member-since').textContent = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      }
+      document.getElementById('account-role').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+
+      // 5. Senior-only fields
+      if (role === 'senior') {
+        document.getElementById('senior-section').style.display = 'block';
+        document.getElementById('bio').value = profile.bio || '';
+        document.getElementById('research_area').value = profile.research_area || '';
+        document.getElementById('linkedin_url').value = profile.linkedin_url || '';
+        document.getElementById('available_for_mentorship').checked = profile.available_for_mentorship || false;
+      }
+
+      // Logout handler
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userProfile');
+        await supabase.auth.signOut();
+        window.location.href = '../index.html';
+      });
+
+      // 6. Handle Form Submission
+      const form = document.getElementById('profile-form');
+      const saveBtn = document.getElementById('save-btn');
+      const statusMsg = document.getElementById('status-message');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+        statusMsg.textContent = '';
+        statusMsg.className = 'text-sm font-medium';
+
+        // Prepare update object
+        const updates = {
+          full_name: document.getElementById('full_name').value,
+          phone: document.getElementById('phone').value,
+          university: document.getElementById('university').value,
+          specialization: document.getElementById('specialization').value,
+          year_of_study: document.getElementById('year_of_study').value,
+          jrf_rank: document.getElementById('jrf_rank').value,
+          jrf_year: document.getElementById('jrf_year').value,
+          previous_college: document.getElementById('previous_college').value,
+        };
+
+        if (role === 'senior') {
+          updates.bio = document.getElementById('bio').value;
+          updates.research_area = document.getElementById('research_area').value;
+          updates.linkedin_url = document.getElementById('linkedin_url').value;
+          updates.available_for_mentorship = document.getElementById('available_for_mentorship').checked;
+        }
+
+        try {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', session.user.id);
+
+          if (updateError) throw updateError;
+
+          statusMsg.textContent = 'Profile updated successfully!';
+          statusMsg.classList.add('text-success');
+
+          // Update header visually
+          document.getElementById('header-name').textContent = updates.full_name;
+          document.getElementById('header-initials').textContent = updates.full_name.charAt(0).toUpperCase();
+          document.getElementById('sidebar-name').textContent = updates.full_name;
+          document.getElementById('sidebar-initials').textContent = updates.full_name.charAt(0).toUpperCase();
+          
+          if(updates.university) {
+            document.getElementById('header-university').textContent = updates.university;
+          }
+
+          setTimeout(() => {
+            statusMsg.textContent = '';
+          }, 3000);
+
+        } catch (err) {
+          console.error("Profile update failed:", err);
+          statusMsg.textContent = 'Failed to update profile: ' + err.message;
+          statusMsg.classList.add('text-error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save Profile';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

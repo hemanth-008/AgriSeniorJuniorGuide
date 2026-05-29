@@ -37,6 +37,7 @@
         
         <div class="dashboard-sidebar__section-title mt-3">Mentorship</div>
         <a href="#mentorship-section" class="dashboard-sidebar__link"><i data-lucide="heart-handshake"></i> Mentorship Requests</a>
+        <a href="profile.html" class="dashboard-sidebar__link"><i data-lucide="user"></i> My Profile</a>
       </nav>
 
       <div class="dashboard-sidebar__footer">
@@ -69,6 +70,8 @@
           <h2 id="welcome-text" style="margin: 0; font-size: 20px;">Welcome back!</h2>
           <p id="welcome-university" style="margin: 4px 0 0; opacity: 0.85; font-size: 14px;"></p>
         </div>
+        
+        <div id="mentorship-warning"></div>
 
         <!-- Quick Actions -->
         <h2 class="mb-3 text-lg">Quick Actions</h2>
@@ -85,7 +88,7 @@
             <i data-lucide="file-text" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
             <h3 class="card__title">My Submissions</h3>
           </a>
-          <a href="#" class="card card--elevated text-center" style="display: block; text-decoration: none;">
+          <a href="profile.html" class="card card--elevated text-center" style="display: block; text-decoration: none;">
             <i data-lucide="user-cog" class="text-primary mb-2" style="width: 32px; height: 32px; margin: 0 auto;"></i>
             <h3 class="card__title">Edit Profile</h3>
           </a>
@@ -142,7 +145,7 @@
       // 2. Fetch fresh role from profiles table (NEVER trust user_metadata)
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role, full_name, university, avatar_url')
+        .select('*')
         .eq('id', session.user.id)
         .single();
 
@@ -165,6 +168,18 @@
       document.getElementById('welcome-text').textContent = `Welcome back, ${displayName}!`;
       if (profile?.university) {
         document.getElementById('welcome-university').textContent = profile.university;
+      }
+      
+      if (!profile?.available_for_mentorship) {
+        document.getElementById('mentorship-warning').innerHTML = `
+          <div class="callout callout--warning mb-4">
+            <p class="m-0 text-sm">
+              <i data-lucide="alert-triangle" style="width: 16px; height: 16px; display: inline-block; vertical-align: text-bottom; margin-right: 4px;"></i>
+              <strong>Action Required:</strong> Your profile is hidden from the Mentor Network. 
+              <a href="profile.html" style="color: inherit; text-decoration: underline;">Complete your profile</a> and turn on availability so juniors can find you.
+            </p>
+          </div>
+        `;
       }
 
       lucide.createIcons();
