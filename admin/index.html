@@ -1175,8 +1175,8 @@
 
       document.getElementById('ai-save-key').addEventListener('click', () => {
         const key = keyInput.value.trim();
-        if (!key || !key.startsWith('AIza')) {
-          alert('Please enter a valid Gemini API key (starts with AIza...)');
+        if (!key || key.length < 10) {
+          alert('Please enter a valid Gemini API key.');
           return;
         }
         localStorage.setItem('gemini_api_key', key);
