@@ -1,801 +1,800 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard | AgriSeniorJuniorGuide</title>
-  
-  <link rel="stylesheet" href="../css/variables.css">
-  <link rel="stylesheet" href="../css/base.css">
-  <link rel="stylesheet" href="../css/components.css">
-  <link rel="stylesheet" href="../css/pages.css">
 
-  <script src="https://unpkg.com/lucide@latest"></script>
-  
-  <style>
-    :root {
-      --color-admin-active: #2E7D32;
-    }
-    .dashboard-sidebar__link.active {
-      background: rgba(46, 125, 50, 0.1);
-      color: var(--color-admin-active);
-      border-right: 3px solid var(--color-admin-active);
-    }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    
-    /* AI Builder Styles */
-    .ai-settings-bar { display: flex; align-items: center; gap: 12px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; }
-    .ai-settings-bar input { flex: 1; max-width: 360px; font-family: monospace; font-size: 13px; }
-    .ai-settings-bar .key-status { font-size: 12px; font-weight: 600; }
-    .ai-settings-bar .key-status.saved { color: #16A34A; }
-    .ai-settings-bar .key-status.missing { color: #DC2626; }
-    
-    .ai-gen-form .form-group { margin-bottom: 14px; }
-    .ai-gen-form textarea { min-height: 100px; }
-    
-    .ai-loading-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
-    .ai-loading-overlay.active { display: flex; }
-    .ai-loading-overlay .spinner-lg { width: 48px; height: 48px; border: 4px solid #E5E7EB; border-top-color: #2E7D32; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .ai-loading-overlay .loading-msg { font-size: 15px; color: var(--color-gray-600); font-weight: 500; min-height: 24px; }
-    
-    .ai-preview-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border); margin-bottom: 16px; }
-    .ai-preview-controls .count-label { font-weight: 600; color: var(--color-gray-700); }
-    
-    .ai-q-card { background: white; border: 2px solid #E5E7EB; border-radius: 10px; padding: 16px; margin-bottom: 12px; transition: border-color 0.2s, box-shadow 0.2s; position: relative; }
-    .ai-q-card.selected { border-color: #2E7D32; box-shadow: 0 0 0 3px rgba(46,125,50,0.12); }
-    .ai-q-card .q-number { position: absolute; top: 12px; left: 16px; background: #F3F4F6; color: #6B7280; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
-    .ai-q-card .q-select { position: absolute; top: 12px; right: 16px; width: 20px; height: 20px; accent-color: #2E7D32; cursor: pointer; }
-    .ai-q-card .q-text { margin-top: 28px; font-weight: 600; font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
-    .ai-q-card .q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 13px; margin-bottom: 10px; }
-    .ai-q-card .q-opt { padding: 4px 0; }
-    .ai-q-card .q-opt.correct { color: #16A34A; font-weight: 600; }
-    .ai-q-card .q-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; margin-bottom: 6px; }
-    .ai-q-card .q-meta .badge { font-size: 11px; }
-    .ai-q-card .q-explanation { font-size: 12px; color: #6B7280; background: #F9FAFB; padding: 8px 12px; border-radius: 6px; line-height: 1.5; }
-    .ai-q-card .q-edit-btn { font-size: 12px; color: #2563EB; cursor: pointer; background: none; border: none; padding: 4px 0; margin-top: 6px; }
-    .ai-q-card .q-edit-btn:hover { text-decoration: underline; }
-    
-    .ai-q-card .q-edit-form { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #D1D5DB; }
-    .ai-q-card .q-edit-form.active { display: block; }
-    .ai-q-card .q-edit-form textarea,
-    .ai-q-card .q-edit-form input { width: 100%; padding: 6px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; margin-bottom: 6px; }
-    .ai-q-card .q-edit-form textarea { min-height: 60px; }
-    .ai-q-card .q-edit-form select { padding: 6px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px; margin-bottom: 6px; }
-    .ai-q-card .q-edit-form .edit-actions { display: flex; gap: 8px; margin-top: 6px; }
-    
-    .ai-save-bar { display: flex; gap: 12px; padding: 16px 0; border-top: 1px solid var(--color-border); margin-top: 12px; flex-wrap: wrap; }
-    .ai-save-bar .btn { min-width: 160px; }
-    
-    .ai-pdf-area { margin-top: 10px; }
-    .ai-pdf-area .pdf-dropzone { border: 2px dashed #D1D5DB; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: border-color 0.2s; background: #FAFAFA; }
-    .ai-pdf-area .pdf-dropzone:hover { border-color: #2E7D32; }
-    .ai-pdf-area .pdf-status { font-size: 13px; color: var(--color-gray-600); margin-top: 8px; }
 
-    @media (max-width: 768px) {
-      .dashboard-sidebar {
-        display: none;
-      }
-      .mobile-tabs {
-        display: flex;
-        overflow-x: auto;
-        background: var(--color-white);
-        border-bottom: 1px solid var(--color-border);
-        padding: 0 var(--space-4);
-      }
-      .mobile-tab-link {
-        padding: var(--space-3);
-        white-space: nowrap;
-        font-weight: 500;
-        color: var(--color-gray-600);
-        text-decoration: none;
-      }
-      .mobile-tab-link.active {
-        color: var(--color-admin-active);
-        border-bottom: 2px solid var(--color-admin-active);
-      }
-      .ai-q-card .q-options { grid-template-columns: 1fr; }
-    }
-    @media (min-width: 769px) {
-      .mobile-tabs { display: none; }
-    }
-  </style>
-</head>
-<body>
 
-  <!-- SECURITY CHECK FIRST LINE OF SCRIPT (Moved to head for quick execution) -->
-  <script type="module">
-    import { supabase } from '../js/supabase.js';
-    window.supabase = supabase;
 
-    async function initAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { window.location.href = '../admin/login.html'; return }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
 
-      if (!profile || profile.role !== 'admin') {
-        alert('Access denied');
-        window.location.href = '../index.html';
-        return;
-      }
-    }
-    initAuth();
-  </script>
 
-  <div class="dashboard-layout">
-    
-    <!-- Sidebar -->
-    <aside class="dashboard-sidebar" id="sidebar">
-      <div class="dashboard-sidebar__header">
-        <a href="../index.html" class="logo">
-          <div class="logo__icon" style="background: var(--color-admin-active); width: 28px; height: 28px;">
-            <i data-lucide="shield" style="width: 16px; height: 16px; color: white;"></i>
-          </div>
-          <div class="logo__text" style="font-size: 16px;">Agri<span>Admin</span></div>
-        </a>
-      </div>
-      
-      <nav class="dashboard-sidebar__nav">
-        <a href="#" class="dashboard-sidebar__link active" data-tab="upload"><i data-lucide="upload"></i> Upload Content</a>
-        <a href="#" class="dashboard-sidebar__link" data-tab="submissions"><i data-lucide="inbox"></i> Submissions <span class="badge badge--primary ml-auto" id="nav-sub-count">0</span></a>
-        <a href="#" class="dashboard-sidebar__link" data-tab="tests"><i data-lucide="file-edit"></i> Test Builder</a>
-        <a href="#" class="dashboard-sidebar__link" data-tab="aibuilder"><i data-lucide="sparkles"></i> AI Builder</a>
-        <a href="#" class="dashboard-sidebar__link" data-tab="users"><i data-lucide="users"></i> Manage Users</a>
-        <a href="#" class="dashboard-sidebar__link" data-tab="analytics"><i data-lucide="bar-chart"></i> Analytics</a>
-        <a href="#" class="dashboard-sidebar__link" data-tab="results"><i data-lucide="award"></i> Results & Stats</a>
-      </nav>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="dashboard-main">
-      <header class="dashboard-topbar">
-        <div class="flex items-center gap-2">
-          <h1 class="dashboard-topbar__title" id="topbar-title">Upload Content</h1>
-        </div>
-        <div class="dashboard-topbar__actions">
-          <button class="btn btn--ghost btn--sm" id="logout-btn">Logout</button>
-        </div>
-      </header>
 
-      <!-- Mobile Tabs -->
-      <nav class="mobile-tabs">
-        <a href="#" class="mobile-tab-link active" data-tab="upload">Upload</a>
-        <a href="#" class="mobile-tab-link" data-tab="submissions">Submissions</a>
-        <a href="#" class="mobile-tab-link" data-tab="tests">Tests</a>
-        <a href="#" class="mobile-tab-link" data-tab="aibuilder">AI Builder</a>
-        <a href="#" class="mobile-tab-link" data-tab="users">Users</a>
-        <a href="#" class="mobile-tab-link" data-tab="analytics">Analytics</a>
-        <a href="#" class="mobile-tab-link" data-tab="results">Results</a>
-      </nav>
 
-      <div class="dashboard-content container pt-4">
-        
-        <!-- ==============================================
-             TAB 1: UPLOAD CONTENT
-             ============================================== -->
-        <div id="tab-upload" class="tab-content active">
-          <div class="grid-2">
-            
-            <!-- YouTube Video Upload -->
-            <div class="card card--elevated">
-              <div class="card__header"><h3 class="card__title">Upload YouTube Video</h3></div>
-              <form id="form-yt">
-                <div class="form-group">
-                  <label class="form-label">Course Title</label>
-                  <input type="text" id="yt-title" class="form-input" required>
-                </div>
-                <div class="grid-2">
-                  <div class="form-group">
-                    <label class="form-label">Subject</label>
-                    <select id="yt-subject" class="form-input" required>
-                      <option value="Agronomy">Agronomy</option>
-                      <option value="Crop Physiology">Crop Physiology</option>
-                      <option value="Soil Science">Soil Science</option>
-                      <option value="Plant Pathology">Plant Pathology</option>
-                      <option value="Genetics">Genetics</option>
-                      <option value="Horticulture">Horticulture</option>
-                      <option value="Agricultural Economics">Agricultural Economics</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Level</label>
-                    <select id="yt-level" class="form-input" required>
-                      <option value="Beginner">Beginner</option>
-                      <option value="Intermediate">Intermediate</option>
-                      <option value="Advanced">Advanced</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div class="form-group">
-                  <label class="form-label">Course Type</label>
-                  <div class="flex gap-4">
-                    <label><input type="radio" name="yt-type" value="Crash Course" checked> Crash Course</label>
-                    <label><input type="radio" name="yt-type" value="Full Syllabus"> Full Syllabus</label>
-                    <label><input type="radio" name="yt-type" value="Live"> Live</label>
-                  </div>
-                </div>
 
-                <div class="grid-2">
-                  <div class="form-group">
-                    <label class="form-label">Instructor Name</label>
-                    <input type="text" id="yt-instructor" class="form-input" required>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Duration</label>
-                    <input type="text" id="yt-duration" class="form-input" placeholder="e.g. 10 days" required>
-                  </div>
-                </div>
 
-                <div class="form-group">
-                  <label class="form-label">YouTube URL</label>
-                  <input type="url" id="yt-url" class="form-input" placeholder="https://youtube.com/watch?v=..." required>
-                </div>
-                
-                <div id="yt-preview" class="mb-3 video-wrapper hidden"></div>
 
-                <div class="form-group">
-                  <label class="form-label">Description</label>
-                  <textarea id="yt-desc" class="form-input"></textarea>
-                </div>
 
-                <div class="flex gap-2">
-                  <button type="button" class="btn btn--secondary flex-1" id="btn-yt-draft">Save as Draft</button>
-                  <button type="submit" class="btn btn--primary flex-1" style="background: var(--color-admin-active);">Publish Now</button>
-                </div>
-              </form>
-            </div>
 
-            <!-- PDF Upload -->
-            <div class="card card--elevated">
-              <div class="card__header"><h3 class="card__title">Upload PDF Material</h3></div>
-              <form id="form-pdf">
-                <div class="form-group">
-                  <label class="form-label">Title</label>
-                  <input type="text" id="pdf-title" class="form-input" required>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Subject</label>
-                  <select id="pdf-subject" class="form-input" required>
-                    <option value="Agronomy">Agronomy</option>
-                    <option value="Crop Physiology">Crop Physiology</option>
-                    <option value="Soil Science">Soil Science</option>
-                    <option value="Plant Pathology">Plant Pathology</option>
-                    <option value="Genetics">Genetics</option>
-                    <option value="Horticulture">Horticulture</option>
-                    <option value="Agricultural Economics">Agricultural Economics</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Description</label>
-                  <textarea id="pdf-desc" class="form-input"></textarea>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">PDF File</label>
-                  <input type="file" id="pdf-file" class="form-input" accept="application/pdf" required>
-                  <div class="form-help">Max 25MB.</div>
-                </div>
-                
-                <div id="pdf-progress-container" class="hidden mb-3">
-                  <div style="height: 4px; background: var(--color-gray-200); border-radius: 2px; overflow: hidden;">
-                    <div id="pdf-progress-bar" style="height: 100%; width: 0%; background: var(--color-admin-active); transition: width 0.3s;"></div>
-                  </div>
-                  <div class="text-xs text-muted mt-1" id="pdf-progress-text">Uploading...</div>
-                </div>
 
-                <button type="submit" class="btn btn--primary w-full" style="background: var(--color-admin-active);" id="btn-pdf-upload">Upload PDF</button>
-              </form>
-            </div>
-          </div>
 
-          <div class="card card--elevated mt-4">
-            <div class="card__header"><h3 class="card__title">Manage Existing Content</h3></div>
-            <div class="table-wrapper">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Subject</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="content-tbody">
-                  <tr><td colspan="5" class="text-center"><div class="spinner mx-auto"></div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
 
-        <!-- ==============================================
-             TAB 2: SUBMISSIONS QUEUE
-             ============================================== -->
-        <div id="tab-submissions" class="tab-content">
-          <div class="card card--elevated">
-            <div class="card__header">
-              <h3 class="card__title">Pending Submissions</h3>
-              <span class="badge badge--warning" id="tab-sub-count">0</span>
-            </div>
-            <div class="table-wrapper mt-3">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Submitted By</th>
-                    <th>Type</th>
-                    <th>Title</th>
-                    <th>Date</th>
-                    <th>Preview</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="queue-tbody">
-                  <tr><td colspan="6" class="text-center"><div class="spinner mx-auto"></div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
 
-        <!-- ==============================================
-             TAB 3: TEST BUILDER
-             ============================================== -->
-        <div id="tab-tests" class="tab-content">
-          <div class="grid-2">
-            <!-- Test Creation & Publishing -->
-            <div>
-              <div class="card card--elevated mb-4" id="test-step-1">
-                <div class="card__header"><h3 class="card__title">Step 1: Create Test</h3></div>
-                <form id="form-create-test">
-                  <div class="form-group">
-                    <label class="form-label">Test Title</label>
-                    <input type="text" id="test-title" class="form-input" required>
-                  </div>
-                  <div class="grid-2">
-                    <div class="form-group">
-                      <label class="form-label">Subject</label>
-                      <input type="text" id="test-subject" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Type</label>
-                      <select id="test-type" class="form-input">
-                        <option value="unit_30_40">Unit Test (30 Questions, 40 mins)</option>
-                        <option value="unit_40_40">Unit Test (40 Questions, 40 mins)</option>
-                        <option value="unit_45_40">Unit Test (45 Questions, 40 mins)</option>
-                        <option value="grand">Grand Test (120 Questions, 2 hrs)</option>
-                        <option value="numerical">Numerical Agronomy (Special)</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="grid-2">
-                    <div class="form-group">
-                      <label class="form-label">Duration (mins)</label>
-                      <input type="number" id="test-duration" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Total Questions</label>
-                      <input type="number" id="test-total-q" class="form-input" required>
-                    </div>
-                  </div>
-                  <button type="submit" class="btn btn--primary w-full">Create Test</button>
-                </form>
-              </div>
 
-              <div class="card card--elevated hidden" id="test-step-3">
-                <div class="card__header"><h3 class="card__title">Step 3: Publish Test</h3></div>
-                <div class="p-3 bg-gray-50 border rounded mb-3">
-                  <strong>Current Test:</strong> <span id="current-test-title"></span><br>
-                  <strong>Questions Added:</strong> <span id="current-test-q-count">0</span>
-                </div>
-                <button id="btn-publish-test" class="btn btn--success w-full">Publish Test</button>
-              </div>
-            </div>
 
-            <!-- Question Adder -->
-            <div class="card card--elevated opacity-50" id="test-step-2" style="pointer-events: none;">
-              <div class="card__header"><h3 class="card__title">Step 2: Add Questions</h3></div>
-              <form id="form-add-q">
-                <div class="form-group">
-                  <label class="form-label">Question Text</label>
-                  <textarea id="q-text" class="form-input" required></textarea>
-                </div>
-                <div class="grid-2">
-                  <div class="form-group"><input type="text" id="q-optA" class="form-input" placeholder="Option A" required></div>
-                  <div class="form-group"><input type="text" id="q-optB" class="form-input" placeholder="Option B" required></div>
-                  <div class="form-group"><input type="text" id="q-optC" class="form-input" placeholder="Option C" required></div>
-                  <div class="form-group"><input type="text" id="q-optD" class="form-input" placeholder="Option D" required></div>
-                </div>
-                <div class="grid-2">
-                  <div class="form-group">
-                    <label class="form-label">Correct Answer</label>
-                    <select id="q-correct" class="form-input" required>
-                      <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Difficulty</label>
-                    <select id="q-diff" class="form-input">
-                      <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Explanation</label>
-                  <textarea id="q-exp" class="form-input"></textarea>
-                </div>
-                <button type="submit" class="btn btn--secondary w-full">Add Question</button>
-              </form>
-            </div>
-          </div>
 
-          <!-- Existing Tests Table -->
-          <div class="card card--elevated mt-4">
-            <div class="card__header"><h3 class="card__title">Existing Tests</h3></div>
-            <div class="table-wrapper">
-              <table class="table">
-                <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody id="tests-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
 
-        <!-- ==============================================
-             TAB: AI SMART TEST BUILDER
-             ============================================== -->
-        <div id="tab-aibuilder" class="tab-content">
-          
-          <!-- API Key Settings -->
-          <div class="ai-settings-bar">
-            <i data-lucide="key" style="width:18px;height:18px;color:#2E7D32;"></i>
-            <label style="font-weight:600;font-size:13px;white-space:nowrap;">Google Gemini API Key</label>
-            <input type="password" id="ai-api-key" class="form-input" placeholder="AIza...">
-            <button class="btn btn--sm btn--primary" id="ai-save-key" style="background:#2E7D32;">Save</button>
-            <span class="key-status" id="ai-key-status"></span>
-          </div>
 
-          <div class="grid-2">
-            <!-- Left: Generation Form -->
-            <div>
-              <div class="card card--elevated">
-                <div class="card__header"><h3 class="card__title">🧠 AI Question Generator</h3></div>
-                <form id="ai-gen-form" class="ai-gen-form" style="padding: 0 16px 16px;">
-                  <div class="form-group">
-                    <label class="form-label">Topic / Chapter *</label>
-                    <input type="text" id="ai-topic" class="form-input" placeholder="e.g. Nitrogen Fixation, Crop Physiology Unit 3" required>
-                  </div>
-                  <div class="grid-2">
-                    <div class="form-group">
-                      <label class="form-label">Subject</label>
-                      <select id="ai-subject" class="form-input">
-                        <option value="Agronomy">Agronomy</option>
-                        <option value="Crop Physiology">Crop Physiology</option>
-                        <option value="Soil Science">Soil Science</option>
-                        <option value="Plant Pathology">Plant Pathology</option>
-                        <option value="Genetics & Plant Breeding">Genetics & Plant Breeding</option>
-                        <option value="Horticulture">Horticulture</option>
-                        <option value="Agricultural Economics">Agricultural Economics</option>
-                        <option value="Entomology">Entomology</option>
-                        <option value="Plant Biochemistry">Plant Biochemistry</option>
-                        <option value="Agricultural Extension">Agricultural Extension</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Difficulty</label>
-                      <select id="ai-difficulty" class="form-input">
-                        <option value="mixed">Mixed (Easy + Medium + Hard)</option>
-                        <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="grid-2">
-                    <div class="form-group">
-                      <label class="form-label">Number of Questions</label>
-                      <select id="ai-count" class="form-input">
-                        <option value="5">5 Questions</option>
-                        <option value="10" selected>10 Questions</option>
-                        <option value="15">15 Questions</option>
-                        <option value="20">20 Questions</option>
-                        <option value="30">30 Questions</option>
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Test Type</label>
-                      <select id="ai-test-type" class="form-input">
-                        <option value="unit_30_40">Unit Test (30Q, 40m)</option>
-                        <option value="unit_40_40">Unit Test (40Q, 40m)</option>
-                        <option value="unit_45_40">Unit Test (45Q, 40m)</option>
-                        <option value="grand">Grand Test (120Q, 2h)</option>
-                        <option value="numerical">Numerical Agronomy</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Focus Area (optional)</label>
-                    <input type="text" id="ai-focus" class="form-input" placeholder="e.g. Biological nitrogen fixers, Rhizobium strains">
-                  </div>
 
-                  <!-- PDF Source -->
-                  <div class="ai-pdf-area">
-                    <label class="form-label" style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="ai-pdf-toggle"> Generate from PDF source</label>
-                    <div id="ai-pdf-section" style="display:none;">
-                      <div class="pdf-dropzone" id="ai-pdf-dropzone">
-                        <i data-lucide="file-text" style="width:32px;height:32px;color:#9CA3AF;margin-bottom:8px;"></i>
-                        <p style="margin:0;font-size:13px;color:#6B7280;">Click to upload or drag a PDF here</p>
-                        <input type="file" id="ai-pdf-file" accept="application/pdf" style="display:none;">
-                      </div>
-                      <div class="pdf-status" id="ai-pdf-status"></div>
-                    </div>
-                  </div>
 
-                  <button type="submit" class="btn btn--primary w-full mt-3" id="ai-gen-btn" style="background:#2E7D32;">
-                    <i data-lucide="sparkles" style="width:16px;height:16px;display:inline-block;vertical-align:text-bottom;margin-right:4px;"></i>
-                    Generate Questions with AI
-                  </button>
-                </form>
-              </div>
-            </div>
 
-            <!-- Right: Preview Panel -->
-            <div>
-              <!-- Loading -->
-              <div class="ai-loading-overlay" id="ai-loading">
-                <div class="spinner-lg"></div>
-                <div class="loading-msg" id="ai-loading-msg">Warming up Gemini...</div>
-              </div>
-              
-              <!-- Empty State -->
-              <div id="ai-empty-state" class="card card--elevated" style="padding:48px 20px;text-align:center;">
-                <i data-lucide="bot" style="width:48px;height:48px;color:#D1D5DB;margin:0 auto 16px;"></i>
-                <h3 style="color:#9CA3AF;font-weight:600;margin-bottom:8px;">No questions generated yet</h3>
-                <p style="color:#D1D5DB;font-size:13px;">Fill in the form and click Generate to create ICAR-pattern MCQs.</p>
-              </div>
 
-              <!-- Preview Container -->
-              <div id="ai-preview-container" style="display:none;">
-                <div class="ai-preview-controls">
-                  <span class="count-label" id="ai-selected-count">0 / 0 selected</span>
-                  <div style="display:flex;gap:8px;">
-                    <button class="btn btn--sm btn--ghost" id="ai-select-all">Select All</button>
-                    <button class="btn btn--sm btn--ghost" id="ai-deselect-all">Deselect All</button>
-                  </div>
-                </div>
-                <div id="ai-questions-list"></div>
-                <div class="ai-save-bar">
-                  <button class="btn btn--secondary" id="ai-save-draft">
-                    <i data-lucide="save" style="width:14px;height:14px;display:inline-block;vertical-align:text-bottom;margin-right:4px;"></i>
-                    Save as Draft
-                  </button>
-                  <button class="btn btn--primary" id="ai-publish" style="background:#2E7D32;">
-                    <i data-lucide="send" style="width:14px;height:14px;display:inline-block;vertical-align:text-bottom;margin-right:4px;"></i>
-                    Publish Test
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- ==============================================
-             TAB 4: MANAGE USERS
-             ============================================== -->
-        <div id="tab-users" class="tab-content">
-          <div class="card card--elevated">
-            <div class="card__header flex items-center justify-between">
-              <h3 class="card__title m-0">Platform Users</h3>
-              <div class="search-bar" style="max-width: 300px; margin: 0;">
-                <i data-lucide="search" class="search-bar__icon"></i>
-                <input type="text" id="user-search" class="form-input" placeholder="Search name or university...">
-              </div>
-            </div>
-            <div class="table-wrapper mt-3">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>University</th>
-                    <th>Role</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="users-tbody">
-                  <tr><td colspan="6" class="text-center"><div class="spinner mx-auto"></div></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
 
-        <!-- ==============================================
-             TAB 5: ANALYTICS
-             ============================================== -->
-        <div id="tab-analytics" class="tab-content">
-          <div class="grid-3 mb-4">
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Total Juniors</div>
-              <h2 class="text-3xl text-primary" id="stat-juniors">0</h2>
-            </div>
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Total Seniors</div>
-              <h2 class="text-3xl text-primary" id="stat-seniors">0</h2>
-            </div>
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Published Courses</div>
-              <h2 class="text-3xl text-primary" id="stat-courses">0</h2>
-            </div>
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Tests Taken</div>
-              <h2 class="text-3xl text-primary" id="stat-attempts">0</h2>
-            </div>
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Pending Submissions</div>
-              <h2 class="text-3xl text-primary" id="stat-pending">0</h2>
-            </div>
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Files Uploaded</div>
-              <h2 class="text-3xl text-primary" id="stat-files">0</h2>
-            </div>
-          </div>
-        </div>
 
-        <!-- ==============================================
-             TAB 6: RESULTS & STATS
-             ============================================== -->
-        <div id="tab-results" class="tab-content">
-          
-          <!-- Section 1: Overall Statistics Cards -->
-          <div class="grid-4 mb-4">
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Total Tests Taken</div>
-              <h2 class="text-3xl text-primary" id="res-total-taken">0</h2>
-            </div>
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Average Score</div>
-              <h2 class="text-3xl text-primary" id="res-avg-score">0</h2>
-            </div>
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Juniors Attempted</div>
-              <h2 class="text-3xl text-primary" id="res-juniors">0</h2>
-            </div>
-            <div class="card card--elevated text-center">
-              <div class="text-muted mb-2">Top Score (7 Days)</div>
-              <h2 class="text-3xl text-primary" id="res-top-weekly">0</h2>
-            </div>
-          </div>
 
-          <!-- Section 2: Test-wise Breakdown Table -->
-          <div class="card card--elevated mb-4">
-            <div class="card__header flex items-center justify-between" style="flex-wrap: wrap; gap: 12px;">
-              <h3 class="card__title m-0">Test-wise Breakdown</h3>
-              <div class="flex items-center gap-2">
-                <select id="res-test-select" class="form-input m-0" style="width: auto; min-width: 200px;">
-                  <option value="">Select a Test...</option>
-                </select>
-                <button class="btn btn--secondary btn--sm" id="res-export-csv"><i data-lucide="download" style="width:14px;height:14px;margin-right:4px;"></i> Export CSV</button>
-              </div>
-            </div>
-            <div class="table-wrapper mt-3">
-              <table class="table w-full">
-                <thead style="background: var(--color-primary-light);">
-                  <tr>
-                    <th>Rank</th>
-                    <th>Junior Name</th>
-                    <th>University</th>
-                    <th>Score / Total</th>
-                    <th>Percentage</th>
-                    <th>Grade</th>
-                    <th>Date Attempted</th>
-                  </tr>
-                </thead>
-                <tbody id="res-test-breakdown-tbody">
-                  <tr><td colspan="7" class="text-center py-4 text-muted">Select a test to view breakdown.</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
 
-          <div class="grid-2">
-            <!-- Section 4: Junior-wise View -->
-            <div class="card card--elevated">
-              <div class="card__header flex items-center justify-between">
-                <h3 class="card__title m-0">Junior-wise Search</h3>
-                <input type="text" id="res-junior-search" class="form-input m-0" placeholder="Search name..." style="max-width: 150px;">
-              </div>
-              <div class="table-wrapper mt-3" style="max-height: 400px; overflow-y: auto;">
-                <table class="table w-full">
-                  <thead>
-                    <tr>
-                      <th>Junior</th>
-                      <th>Tests Taken</th>
-                      <th>Avg %</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody id="res-junior-search-tbody">
-                    <tr><td colspan="4" class="text-center py-4 text-muted">Enter search...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
 
-            <!-- Section 5: Overall Leaderboard -->
-            <div class="card card--elevated">
-              <div class="card__header">
-                <h3 class="card__title m-0">Overall Leaderboard (Top 20)</h3>
-              </div>
-              <div class="table-wrapper mt-3" style="max-height: 400px; overflow-y: auto;">
-                <table class="table w-full">
-                  <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Junior</th>
-                      <th>Tests</th>
-                      <th>Avg %</th>
-                      <th>Best %</th>
-                    </tr>
-                  </thead>
-                  <tbody id="res-leaderboard-tbody">
-                    <tr><td colspan="5" class="text-center py-4"><div class="spinner mx-auto"></div></td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Section 3: Individual Junior Report Modal -->
-        <div id="res-junior-modal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
-          <div class="modal-content" style="background: white; width: 90%; max-width: 600px; border-radius: 8px; padding: 24px; max-height: 90vh; overflow-y: auto; position: relative;">
-            <button id="res-modal-close" class="btn btn--ghost" style="position: absolute; top: 12px; right: 12px;"><i data-lucide="x"></i></button>
-            <h2 id="res-modal-name" class="mb-1">Junior Name</h2>
-            <div id="res-modal-uni" class="text-muted text-sm mb-4">University</div>
-            
-            <h3 class="text-md mb-2 border-b pb-1">Performance Summary</h3>
-            <div class="grid-2 mb-4">
-              <div><strong>Test:</strong> <span id="res-modal-test"></span></div>
-              <div><strong>Date:</strong> <span id="res-modal-date"></span></div>
-              <div><strong>Score:</strong> <span id="res-modal-score"></span></div>
-              <div><strong>Percentage:</strong> <span id="res-modal-perc"></span></div>
-            </div>
-            
-            <div class="mb-4">
-              <strong>ICAR Marking:</strong> +4 per correct, -1 per wrong
-            </div>
-            
-            <h3 class="text-md mb-2 border-b pb-1">Subject-wise Breakdown</h3>
-            <div class="table-wrapper mb-4">
-              <table class="table w-full text-sm">
-                <thead><tr><th>Subject</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Score</th></tr></thead>
-                <tbody id="res-modal-subjects-tbody"></tbody>
-              </table>
-            </div>
 
-            <div class="p-3 bg-gray-50 border rounded text-center font-semibold text-primary" id="res-modal-rank">
-              Ranked Nth out of X
-            </div>
-          </div>
-        </div>
 
-      </div>
-    </main>
-  </div>
 
-  <script type="module">
-    import { supabase } from '../js/supabase.js';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { supabase } from '../js/supabase.js';
     
     // Core state
     let activeTestId = null;
@@ -2057,7 +2056,3 @@ The correct_option field must be exactly one of: a, b, c, or d (lowercase letter
       document.getElementById('res-junior-search-tbody').innerHTML = html;
       lucide.createIcons();
     };
-
-  </script>
-</body>
-</html>
