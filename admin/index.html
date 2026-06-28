@@ -1263,27 +1263,44 @@
       // Step 2: Add Q
       document.getElementById('form-add-q').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if(!activeTestId) return;
+        if(!activeTestId) {
+          alert('Please create the test first before adding questions');
+          return;
+        }
 
+        const qText = document.getElementById('q-text').value;
         const optA = document.getElementById('q-optA').value;
         const optB = document.getElementById('q-optB').value;
         const optC = document.getElementById('q-optC').value;
         const optD = document.getElementById('q-optD').value;
         const correctChar = document.getElementById('q-correct').value.toLowerCase();
+        const explanation = document.getElementById('q-exp').value;
+        const difficulty = document.getElementById('q-diff').value;
+        const testSubject = document.getElementById('test-subject').value;
+
+        if (!qText || !optA || !optB || !optC || !optD || !correctChar) {
+          alert('Please fill in all question fields');
+          return;
+        }
 
         try {
-          await supabase.from('questions').insert({
+          const { error } = await supabase.from('questions').insert({
             test_id: activeTestId,
-            question_text: document.getElementById('q-text').value,
+            question_text: qText,
             option_a: optA,
             option_b: optB,
             option_c: optC,
             option_d: optD,
             correct_option: correctChar,
-            explanation: document.getElementById('q-exp').value,
-            subject: document.getElementById('test-subject').value,
-            difficulty: document.getElementById('q-diff').value
+            explanation: explanation,
+            subject: testSubject,
+            difficulty: difficulty
           });
+
+          if (error) {
+            alert('Failed to save question: ' + error.message);
+            return;
+          }
 
           questionsAdded++;
           document.getElementById('current-test-q-count').textContent = questionsAdded + ' questions added so far';
@@ -1293,11 +1310,42 @@
 
       // Step 3: Publish
       document.getElementById('btn-publish-test').addEventListener('click', async () => {
-        if(!activeTestId) return;
+        if(!activeTestId) {
+          alert('No test created yet');
+          return;
+        }
+        if (questionsAdded === 0) {
+          alert('Please add at least one question before publishing');
+          return;
+        }
+
         try {
-          await supabase.from('tests').update({ status: 'published' }).eq('id', activeTestId);
-          alert('Test published successfully!');
-          window.location.reload(); // reset state
+          const { error } = await supabase.from('tests').update({ 
+            status: 'published',
+            total_questions: questionsAdded
+          }).eq('id', activeTestId);
+          
+          if (error) {
+            alert('Publish failed: ' + error.message);
+            return;
+          }
+
+          alert('Test published successfully with ' + questionsAdded + ' questions!');
+          
+          // Reset for next test
+          activeTestId = null;
+          questionsAdded = 0;
+          document.getElementById('current-test-q-count').textContent = '0 questions added so far';
+          
+          document.getElementById('test-step-2').classList.add('opacity-50');
+          document.getElementById('test-step-2').style.pointerEvents = 'none';
+          document.getElementById('test-step-3').classList.add('hidden');
+          
+          document.getElementById('test-step-1').classList.remove('opacity-50');
+          document.getElementById('test-step-1').style.pointerEvents = 'auto';
+          document.getElementById('form-create-test').reset();
+          
+          loadTestsTable();
         } catch (e) { alert(e.message); }
       });
     }
