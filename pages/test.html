@@ -379,52 +379,62 @@
 
     async function loadTest() {
       const urlParams = new URLSearchParams(window.location.search);
-      const testId = urlParams.get('test_id');
+      const testId = urlParams.get('id');
+      console.log('Test ID from URL:', testId);
 
       if (!testId) {
-        // Fallback or demo
-        document.getElementById('test-title').textContent = "Demo ICAR Assessment";
-        if (window.APP_DATA && window.APP_DATA.sampleQuestions) {
-          questions = window.APP_DATA.sampleQuestions;
-        }
-      } else {
-        try {
-          // Fetch test details
-          const { data: testData, error: tErr } = await supabase.from('tests').select('*').eq('id', testId).single();
-          if (tErr) throw tErr;
-          
-          document.getElementById('test-title').textContent = testData.title || "ICAR Assessment";
-          timeLeft = (testData.duration_minutes || 30) * 60;
-
-          // Fetch questions
-          const { data: qData, error: qErr } = await supabase.from('questions').select('*').eq('test_id', testId);
-          if (qErr) throw qErr;
-
-          if (qData && qData.length > 0) {
-            // Assume qData options are stored as JSON: [{key: 'A', text: '...'}, ...]
-            questions = qData.map(q => ({
-              id: q.id,
-              subject: q.subject || testData.subject || 'General',
-              isNumerical: q.is_numerical || false,
-              text: q.text,
-              options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
-              correctKey: q.correct_key,
-              explanation: q.explanation || ''
-            }));
-          } else {
-             // Fallback to sample if empty
-             if (window.APP_DATA && window.APP_DATA.sampleQuestions) {
-               questions = window.APP_DATA.sampleQuestions;
-             }
-          }
-        } catch (e) {
-          console.error("Error loading test:", e);
-        }
+        alert('No test ID found in URL. Please go back and select a test.');
+        window.location.href = '../pages/test-list.html';
+        return;
       }
 
-      if (questions.length === 0) {
-        alert("No questions found for this test.");
-        window.location.href = '../pages/junior-dashboard.html';
+      try {
+        // Fetch test details
+        const { data: testData, error: tErr } = await supabase.from('tests').select('*').eq('id', testId).single();
+        if (tErr) {
+          console.error('Test fetch error:', tErr);
+          alert('Error loading test: ' + tErr.message);
+          return;
+        }
+        
+        document.getElementById('test-title').textContent = testData.title || "ICAR Assessment";
+        timeLeft = (testData.duration_minutes || 30) * 60;
+
+        // Fetch questions using exact testId
+        const { data: qData, error: qErr } = await supabase.from('questions').select('*').eq('test_id', testId);
+        console.log('Questions loaded:', qData?.length);
+        console.log('Error if any:', qErr);
+
+        if (qErr) {
+          alert('Error loading questions: ' + qErr.message);
+          return;
+        }
+
+        if (!qData || qData.length === 0) {
+          alert('No questions found for test ID: ' + testId);
+          window.location.href = '../pages/test-list.html';
+          return;
+        }
+
+        // Map DB columns (option_a/b/c/d, question_text, correct_option) to engine format
+        questions = qData.map(q => ({
+          id: q.id,
+          subject: q.subject || testData.subject || 'General',
+          isNumerical: q.is_numerical || false,
+          text: q.question_text,
+          options: [
+            { key: 'a', text: q.option_a },
+            { key: 'b', text: q.option_b },
+            { key: 'c', text: q.option_c },
+            { key: 'd', text: q.option_d }
+          ],
+          correctKey: (q.correct_option || 'a').toLowerCase(),
+          explanation: q.explanation || ''
+        }));
+
+      } catch (e) {
+        console.error("Error loading test:", e);
+        alert('Failed to load test: ' + e.message);
         return;
       }
 
@@ -630,7 +640,7 @@
           document.getElementById('btn-submit-test').disabled = true;
 
           const urlParams = new URLSearchParams(window.location.search);
-          const testId = urlParams.get('test_id') || null;
+          const testId = urlParams.get('id') || null;
 
           await supabase.from('test_attempts').insert({
             student_id: user.id,
