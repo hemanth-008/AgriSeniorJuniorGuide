@@ -421,7 +421,7 @@
                   <div class="form-group">
                     <label class="form-label">Difficulty</label>
                     <select id="q-diff" class="form-input">
-                      <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
+                      <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
                     </select>
                   </div>
                 </div>
@@ -1275,7 +1275,7 @@
         const optD = document.getElementById('q-optD').value;
         const correctChar = document.getElementById('q-correct').value.toLowerCase();
         const explanation = document.getElementById('q-exp').value;
-        const difficulty = document.getElementById('q-diff').value;
+        const difficulty = document.getElementById('q-diff').value.toLowerCase().trim();
         const testSubject = document.getElementById('test-subject').value;
 
         if (!qText || !optA || !optB || !optC || !optD || !correctChar) {
@@ -1515,7 +1515,7 @@ Return ONLY a valid JSON array in this exact format:
     "correct_option": "a",
     "explanation": "detailed explanation here",
     "subject": "${subject}",
-    "difficulty": "easy or medium or hard"
+    "difficulty": "difficulty must be exactly: easy, medium, or hard (always lowercase, no other values)"
   }
 ]
 Do NOT use an "options" array. Each option MUST be a separate field: option_a, option_b, option_c, option_d.
