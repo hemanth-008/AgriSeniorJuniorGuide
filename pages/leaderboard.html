@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Leaderboard | AgriSeniorJuniorGuide</title>
+  
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/pages.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div class="dashboard-layout">
+    
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar" id="sidebar">
+      <div class="dashboard-sidebar__header">
+        <a href="../index.html" class="logo">
+          <div class="logo__icon" style="width: 28px; height: 28px;">
+            <i data-lucide="leaf" style="width: 16px; height: 16px;"></i>
+          </div>
+          <div class="logo__text" style="font-size: 16px;">Agri<span>SJ</span>Guide</div>
+        </a>
+      </div>
+      
+      <nav class="dashboard-sidebar__nav">
+        <a href="#" id="nav-dashboard" class="dashboard-sidebar__link"><i data-lucide="layout-dashboard"></i> Back to Dashboard</a>
+        <a href="leaderboard.html" class="dashboard-sidebar__link active"><i data-lucide="award"></i> Global Leaderboard</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <header class="dashboard-topbar">
+        <div class="flex items-center gap-2">
+          <h1 class="dashboard-topbar__title">Global Leaderboard</h1>
+        </div>
+        <div class="dashboard-topbar__actions">
+          <button class="btn btn--ghost btn--sm logout-btn" id="logout-btn">Logout</button>
+        </div>
+      </header>
+
+      <div class="dashboard-content container">
+        
+        <div class="card card--elevated mb-4" style="background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); color: white; padding: var(--space-5); text-align: center;">
+          <i data-lucide="trophy" style="width: 48px; height: 48px; margin: 0 auto 12px; opacity: 0.9;"></i>
+          <h2 style="margin: 0; font-size: 24px;">Top Performers</h2>
+          <p style="margin: 8px 0 0; opacity: 0.85; font-size: 15px;">Ranked by average score across all tests</p>
+        </div>
+
+        <div class="card card--elevated">
+          <div class="table-wrapper">
+            <table class="table text-left w-full">
+              <thead style="background: var(--color-primary-light);">
+                <tr>
+                  <th>Rank</th>
+                  <th>Student</th>
+                  <th>Tests Taken</th>
+                  <th>Average %</th>
+                  <th>Best %</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-tbody">
+                <tr>
+                  <td colspan="5" class="text-center py-4"><div class="spinner mx-auto"></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Determine dashboard link
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+      const role = (profile?.role || 'junior').toLowerCase();
+      
+      const navDash = document.getElementById('nav-dashboard');
+      if (role === 'admin') navDash.href = '../admin/index.html';
+      else if (role === 'senior') navDash.href = 'senior-dashboard.html';
+      else navDash.href = 'junior-dashboard.html';
+
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        window.location.href = '../index.html';
+      });
+
+      await loadLeaderboard(session.user.id);
+    });
+
+    async function loadLeaderboard(currentUserId) {
+      const tbody = document.getElementById('leaderboard-tbody');
+      
+      try {
+        const { data: attempts, error } = await supabase
+          .from('test_attempts')
+          .select('*, profiles (id, full_name, university)');
+
+        if (error) throw error;
+        
+        let statsMap = {};
+        (attempts || []).forEach(a => {
+          if (!statsMap[a.junior_id]) {
+            statsMap[a.junior_id] = {
+              id: a.junior_id, 
+              name: a.profiles?.full_name || 'Unknown', 
+              uni: a.profiles?.university || '-',
+              tests: 0, 
+              totalScore: 0, 
+              totalMax: 0, 
+              bestPerc: 0
+            };
+          }
+          let stat = statsMap[a.junior_id];
+          stat.tests++;
+          stat.totalScore += (a.score || 0);
+          stat.totalMax += (a.total || 1);
+          let perc = a.total > 0 ? (a.score / a.total) * 100 : 0;
+          if (perc > stat.bestPerc) stat.bestPerc = perc;
+        });
+
+        let arr = Object.values(statsMap);
+        arr.forEach(s => s.avgPerc = s.totalMax > 0 ? (s.totalScore / s.totalMax) * 100 : 0);
+        arr.sort((a, b) => b.avgPerc - a.avgPerc);
+
+        if (arr.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No tests taken yet.</td></tr>';
+          return;
+        }
+
+        let html = '';
+        
+        // Ensure current user is in the list even if not top 20
+        let currentUserRank = -1;
+        let currentUserData = null;
+        
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i].id === currentUserId) {
+            currentUserRank = i + 1;
+            currentUserData = arr[i];
+            break;
+          }
+        }
+
+        const top20 = arr.slice(0, 20);
+        
+        let isCurrentUserInTop20 = false;
+
+        top20.forEach((s, idx) => {
+          let rank = idx + 1;
+          let rankBadge = `${rank}`;
+          if (rank === 1) rankBadge = '🥇 1st';
+          if (rank === 2) rankBadge = '🥈 2nd';
+          if (rank === 3) rankBadge = '🥉 3rd';
+          
+          let isMe = s.id === currentUserId;
+          if (isMe) {
+            isCurrentUserInTop20 = true;
+          }
+          
+          // Highlight current user's row in green
+          let rowStyle = isMe ? 'background: #F0FDF4; border-left: 4px solid #22C55E;' : '';
+
+          html += `
+            <tr style="${rowStyle}">
+              <td><strong>${rankBadge}</strong></td>
+              <td>
+                <div class="font-semibold ${isMe ? 'text-success' : ''}">${s.name} ${isMe ? ' (You)' : ''}</div>
+                <div class="text-xs text-muted">${s.uni}</div>
+              </td>
+              <td>${s.tests}</td>
+              <td>${s.avgPerc.toFixed(1)}%</td>
+              <td class="text-primary font-bold">${s.bestPerc.toFixed(1)}%</td>
+            </tr>
+          `;
+        });
+        
+        // If current user is not in top 20 but has taken a test, append them at the bottom
+        if (currentUserData && !isCurrentUserInTop20) {
+          html += `
+            <tr><td colspan="5" class="text-center text-muted" style="background: #F9FAFB; padding: 4px;">...</td></tr>
+            <tr style="background: #F0FDF4; border-left: 4px solid #22C55E;">
+              <td><strong>${currentUserRank}</strong></td>
+              <td>
+                <div class="font-semibold text-success">${currentUserData.name} (You)</div>
+                <div class="text-xs text-muted">${currentUserData.uni}</div>
+              </td>
+              <td>${currentUserData.tests}</td>
+              <td>${currentUserData.avgPerc.toFixed(1)}%</td>
+              <td class="text-primary font-bold">${currentUserData.bestPerc.toFixed(1)}%</td>
+            </tr>
+          `;
+        }
+
+        tbody.innerHTML = html;
+
+      } catch (err) {
+        console.error("Error loading leaderboard:", err);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-error">Failed to load leaderboard.</td></tr>';
+      }
+    }
+  </script>
+</body>
+</html>

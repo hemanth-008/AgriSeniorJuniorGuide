@@ -123,6 +123,33 @@
           </section>
         </div>
 
+        <!-- My Test History -->
+        <section class="dashboard-section mt-4" id="test-history-section">
+          <div class="dashboard-section__header flex justify-between items-center">
+            <h2 class="dashboard-section__title">My Test History</h2>
+          </div>
+          <div class="dashboard-section__body" style="padding: 0;">
+            <div class="table-wrapper">
+              <table class="table text-sm text-left w-full">
+                <thead>
+                  <tr>
+                    <th>Test Name</th>
+                    <th>Score</th>
+                    <th>Grade</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="test-history-tbody">
+                  <tr>
+                    <td colspan="5" class="text-center py-4"><div class="spinner mx-auto"></div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
       </div>
     </main>
   </div>
@@ -208,7 +235,59 @@
 
       // 7. Load My Submissions
       await loadMySubmissions(session.user.id);
+
+      // 8. Load Test History
+      await loadTestHistory(session.user.id);
     });
+
+    async function loadTestHistory(userId) {
+      try {
+        const { data: attempts, error } = await supabase
+          .from('test_attempts')
+          .select(`*, tests ( title )`)
+          .eq('junior_id', userId)
+          .order('completed_at', { ascending: false });
+
+        if (error) throw error;
+        
+        const historyTbody = document.getElementById('test-history-tbody');
+
+        if (attempts && attempts.length > 0) {
+          let historyHtml = '';
+          attempts.forEach(att => {
+            const maxScore = att.total || 1;
+            const percentage = ((att.score / maxScore) * 100);
+            
+            let grade = 'D';
+            if (percentage >= 90) grade = 'A+';
+            else if (percentage >= 75) grade = 'A';
+            else if (percentage >= 60) grade = 'B';
+            else if (percentage >= 45) grade = 'C';
+
+            let gradeBadge = 'badge--error';
+            if (grade === 'A+' || grade === 'A') gradeBadge = 'badge--success';
+            else if (grade === 'B') gradeBadge = 'badge--primary';
+            else if (grade === 'C') gradeBadge = 'badge--warning';
+
+            historyHtml += `
+              <tr>
+                <td><strong>${att.tests?.title || 'Unknown Test'}</strong></td>
+                <td>${att.score} / ${maxScore}</td>
+                <td><span class="badge ${gradeBadge}">${grade}</span></td>
+                <td>${new Date(att.completed_at).toLocaleDateString()}</td>
+                <td><a href="test.html?id=${att.test_id}&review=true" class="text-primary hover-underline">View Details</a></td>
+              </tr>
+            `;
+          });
+          historyTbody.innerHTML = historyHtml;
+        } else {
+          historyTbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No tests taken yet.</td></tr>';
+        }
+      } catch(e) { 
+        console.error("Error fetching test history:", e); 
+        document.getElementById('test-history-tbody').innerHTML = '<tr><td colspan="5" class="text-center text-error">Failed to load history</td></tr>';
+      }
+    }
 
     async function loadMentorshipRequests(userId) {
       const container = document.getElementById('mentorship-container');
