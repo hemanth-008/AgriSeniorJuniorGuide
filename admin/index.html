@@ -148,6 +148,7 @@
         <a href="#" class="dashboard-sidebar__link" data-tab="aibuilder"><i data-lucide="sparkles"></i> AI Builder</a>
         <a href="#" class="dashboard-sidebar__link" data-tab="users"><i data-lucide="users"></i> Manage Users</a>
         <a href="#" class="dashboard-sidebar__link" data-tab="analytics"><i data-lucide="bar-chart"></i> Analytics</a>
+        <a href="#" class="dashboard-sidebar__link" data-tab="results"><i data-lucide="award"></i> Results & Stats</a>
       </nav>
     </aside>
 
@@ -170,6 +171,7 @@
         <a href="#" class="mobile-tab-link" data-tab="aibuilder">AI Builder</a>
         <a href="#" class="mobile-tab-link" data-tab="users">Users</a>
         <a href="#" class="mobile-tab-link" data-tab="analytics">Analytics</a>
+        <a href="#" class="mobile-tab-link" data-tab="results">Results</a>
       </nav>
 
       <div class="dashboard-content container pt-4">
@@ -650,6 +652,144 @@
           </div>
         </div>
 
+        <!-- ==============================================
+             TAB 6: RESULTS & STATS
+             ============================================== -->
+        <div id="tab-results" class="tab-content">
+          
+          <!-- Section 1: Overall Statistics Cards -->
+          <div class="grid-4 mb-4">
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Total Tests Taken</div>
+              <h2 class="text-3xl text-primary" id="res-total-taken">0</h2>
+            </div>
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Average Score</div>
+              <h2 class="text-3xl text-primary" id="res-avg-score">0</h2>
+            </div>
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Juniors Attempted</div>
+              <h2 class="text-3xl text-primary" id="res-juniors">0</h2>
+            </div>
+            <div class="card card--elevated text-center">
+              <div class="text-muted mb-2">Top Score (7 Days)</div>
+              <h2 class="text-3xl text-primary" id="res-top-weekly">0</h2>
+            </div>
+          </div>
+
+          <!-- Section 2: Test-wise Breakdown Table -->
+          <div class="card card--elevated mb-4">
+            <div class="card__header flex items-center justify-between" style="flex-wrap: wrap; gap: 12px;">
+              <h3 class="card__title m-0">Test-wise Breakdown</h3>
+              <div class="flex items-center gap-2">
+                <select id="res-test-select" class="form-input m-0" style="width: auto; min-width: 200px;">
+                  <option value="">Select a Test...</option>
+                </select>
+                <button class="btn btn--secondary btn--sm" id="res-export-csv"><i data-lucide="download" style="width:14px;height:14px;margin-right:4px;"></i> Export CSV</button>
+              </div>
+            </div>
+            <div class="table-wrapper mt-3">
+              <table class="table w-full">
+                <thead style="background: var(--color-primary-light);">
+                  <tr>
+                    <th>Rank</th>
+                    <th>Junior Name</th>
+                    <th>University</th>
+                    <th>Score / Total</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                    <th>Date Attempted</th>
+                  </tr>
+                </thead>
+                <tbody id="res-test-breakdown-tbody">
+                  <tr><td colspan="7" class="text-center py-4 text-muted">Select a test to view breakdown.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <!-- Section 4: Junior-wise View -->
+            <div class="card card--elevated">
+              <div class="card__header flex items-center justify-between">
+                <h3 class="card__title m-0">Junior-wise Search</h3>
+                <input type="text" id="res-junior-search" class="form-input m-0" placeholder="Search name..." style="max-width: 150px;">
+              </div>
+              <div class="table-wrapper mt-3" style="max-height: 400px; overflow-y: auto;">
+                <table class="table w-full">
+                  <thead>
+                    <tr>
+                      <th>Junior</th>
+                      <th>Tests Taken</th>
+                      <th>Avg %</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="res-junior-search-tbody">
+                    <tr><td colspan="4" class="text-center py-4 text-muted">Enter search...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Section 5: Overall Leaderboard -->
+            <div class="card card--elevated">
+              <div class="card__header">
+                <h3 class="card__title m-0">Overall Leaderboard (Top 20)</h3>
+              </div>
+              <div class="table-wrapper mt-3" style="max-height: 400px; overflow-y: auto;">
+                <table class="table w-full">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Junior</th>
+                      <th>Tests</th>
+                      <th>Avg %</th>
+                      <th>Best %</th>
+                    </tr>
+                  </thead>
+                  <tbody id="res-leaderboard-tbody">
+                    <tr><td colspan="5" class="text-center py-4"><div class="spinner mx-auto"></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Individual Junior Report Modal -->
+        <div id="res-junior-modal" class="modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center;">
+          <div class="modal-content" style="background: white; width: 90%; max-width: 600px; border-radius: 8px; padding: 24px; max-height: 90vh; overflow-y: auto; position: relative;">
+            <button id="res-modal-close" class="btn btn--ghost" style="position: absolute; top: 12px; right: 12px;"><i data-lucide="x"></i></button>
+            <h2 id="res-modal-name" class="mb-1">Junior Name</h2>
+            <div id="res-modal-uni" class="text-muted text-sm mb-4">University</div>
+            
+            <h3 class="text-md mb-2 border-b pb-1">Performance Summary</h3>
+            <div class="grid-2 mb-4">
+              <div><strong>Test:</strong> <span id="res-modal-test"></span></div>
+              <div><strong>Date:</strong> <span id="res-modal-date"></span></div>
+              <div><strong>Score:</strong> <span id="res-modal-score"></span></div>
+              <div><strong>Percentage:</strong> <span id="res-modal-perc"></span></div>
+            </div>
+            
+            <div class="mb-4">
+              <strong>ICAR Marking:</strong> +4 per correct, -1 per wrong
+            </div>
+            
+            <h3 class="text-md mb-2 border-b pb-1">Subject-wise Breakdown</h3>
+            <div class="table-wrapper mb-4">
+              <table class="table w-full text-sm">
+                <thead><tr><th>Subject</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Score</th></tr></thead>
+                <tbody id="res-modal-subjects-tbody"></tbody>
+              </table>
+            </div>
+
+            <div class="p-3 bg-gray-50 border rounded text-center font-semibold text-primary" id="res-modal-rank">
+              Ranked Nth out of X
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -695,6 +835,7 @@
           if (target === 'tests') loadTestsTable();
           if (target === 'users') loadUsers();
           if (target === 'analytics') loadAnalytics();
+          if (target === 'results') loadResultsTab();
         });
       });
 
@@ -1599,6 +1740,323 @@ The correct_option field must be exactly one of: a, b, c, or d (lowercase letter
         }
       }
     }
+
+    // --- RESULTS & STATS TAB ---
+
+    let allAttempts = [];
+
+    async function loadResultsTab() {
+      try {
+        const { data: attempts, error: attErr } = await supabase
+          .from('test_attempts')
+          .select('*, tests (id, title), profiles (id, full_name, university, email)')
+          .order('completed_at', { ascending: false });
+
+        if (attErr) throw attErr;
+        allAttempts = attempts || [];
+
+        // 1. Overall Stats
+        document.getElementById('res-total-taken').textContent = allAttempts.length;
+        
+        let totalScore = 0, totalMax = 0;
+        let juniorSet = new Set();
+        let topWeekly = 0;
+        const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+        allAttempts.forEach(a => {
+          totalScore += (a.score || 0);
+          totalMax += (a.total || 1);
+          juniorSet.add(a.junior_id);
+          const compDate = new Date(a.completed_at);
+          if (compDate > oneWeekAgo && (a.score || 0) > topWeekly) {
+            topWeekly = a.score;
+          }
+        });
+
+        const avgPerc = totalMax > 0 ? ((totalScore / totalMax) * 100).toFixed(1) : '0';
+        document.getElementById('res-avg-score').textContent = avgPerc + '%';
+        document.getElementById('res-juniors').textContent = juniorSet.size;
+        document.getElementById('res-top-weekly').textContent = topWeekly;
+
+        // 2. Populate Test Dropdown
+        const { data: tests, error: testErr } = await supabase.from('tests').select('id, title').order('created_at', { ascending: false });
+        if (!testErr && tests) {
+          const select = document.getElementById('res-test-select');
+          while (select.options.length > 1) { select.remove(1); }
+          tests.forEach(t => { select.add(new Option(t.title, t.id)); });
+        }
+
+        renderLeaderboard(allAttempts);
+      } catch (err) {
+        console.error("Error loading results tab:", err);
+      }
+    }
+
+    function renderLeaderboard(attempts) {
+      let statsMap = {};
+      attempts.forEach(a => {
+        if (!statsMap[a.junior_id]) {
+          statsMap[a.junior_id] = {
+            id: a.junior_id, name: a.profiles?.full_name || 'Unknown', uni: a.profiles?.university || '-',
+            tests: 0, totalScore: 0, totalMax: 0, bestPerc: 0
+          };
+        }
+        let stat = statsMap[a.junior_id];
+        stat.tests++;
+        stat.totalScore += (a.score || 0);
+        stat.totalMax += (a.total || 1);
+        let perc = a.total > 0 ? (a.score / a.total) * 100 : 0;
+        if (perc > stat.bestPerc) stat.bestPerc = perc;
+      });
+
+      let arr = Object.values(statsMap);
+      arr.forEach(s => s.avgPerc = s.totalMax > 0 ? (s.totalScore / s.totalMax) * 100 : 0);
+      arr.sort((a, b) => b.avgPerc - a.avgPerc);
+
+      let tbody = document.getElementById('res-leaderboard-tbody');
+      if (arr.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No data available.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      arr.slice(0, 20).forEach((s, idx) => {
+        let rankBadge = `${idx + 1}`;
+        if (idx === 0) rankBadge = '🥇 1st';
+        if (idx === 1) rankBadge = '🥈 2nd';
+        if (idx === 2) rankBadge = '🥉 3rd';
+        html += `
+          <tr>
+            <td><strong>${rankBadge}</strong></td>
+            <td><div class="font-semibold">${s.name}</div><div class="text-xs text-muted">${s.uni}</div></td>
+            <td>${s.tests}</td>
+            <td>${s.avgPerc.toFixed(1)}%</td>
+            <td class="text-primary font-bold">${s.bestPerc.toFixed(1)}%</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function getGrade(perc) {
+      if (perc >= 90) return { letter: 'A+', class: 'badge--success', desc: 'Excellent' };
+      if (perc >= 75) return { letter: 'A', class: 'badge--success', desc: 'Very Good' };
+      if (perc >= 60) return { letter: 'B', class: 'badge--primary', desc: 'Good' };
+      if (perc >= 45) return { letter: 'C', class: 'badge--warning', desc: 'Average' };
+      return { letter: 'D', class: 'badge--error', desc: 'Needs Improvement' };
+    }
+
+    document.getElementById('res-test-select').addEventListener('change', (e) => {
+      const testId = e.target.value;
+      const tbody = document.getElementById('res-test-breakdown-tbody');
+      if (!testId) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Select a test to view breakdown.</td></tr>';
+        return;
+      }
+      const testAttempts = allAttempts.filter(a => a.test_id == testId);
+      testAttempts.sort((a, b) => {
+        let percA = a.total > 0 ? (a.score / a.total) : 0;
+        let percB = b.total > 0 ? (b.score / b.total) : 0;
+        return percB - percA;
+      });
+
+      if (testAttempts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No attempts found for this test.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      testAttempts.forEach((a, idx) => {
+        let rank = idx + 1;
+        let borderClass = '';
+        if (rank === 1) borderClass = 'border-l-4 border-yellow-400';
+        else if (rank === 2) borderClass = 'border-l-4 border-gray-400';
+        else if (rank === 3) borderClass = 'border-l-4 border-yellow-600';
+
+        const perc = a.total > 0 ? (a.score / a.total) * 100 : 0;
+        const grade = getGrade(perc);
+        const aJson = encodeURIComponent(JSON.stringify(a));
+        const rankStr = `${rank} out of ${testAttempts.length}`;
+
+        html += `
+          <tr class="${borderClass} cursor-pointer hover:bg-gray-50" onclick="openJuniorModal('${aJson}', '${rankStr}')" style="${borderClass ? 'background: #fffdf5;' : ''}">
+            <td>${rank}</td>
+            <td><strong>${a.profiles?.full_name || 'Unknown'}</strong></td>
+            <td class="text-muted text-sm">${a.profiles?.university || '-'}</td>
+            <td>${a.score} / ${a.total}</td>
+            <td>${perc.toFixed(1)}%</td>
+            <td><span class="badge ${grade.class}">${grade.letter}</span></td>
+            <td class="text-muted text-sm">${new Date(a.completed_at).toLocaleDateString()}</td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    });
+
+    window.openJuniorModal = (encodedAttempt, rankStr) => {
+      const a = JSON.parse(decodeURIComponent(encodedAttempt));
+      document.getElementById('res-modal-name').textContent = a.profiles?.full_name || 'Unknown Junior';
+      document.getElementById('res-modal-uni').textContent = a.profiles?.university || 'University not specified';
+      document.getElementById('res-modal-test').textContent = a.tests?.title || 'Test';
+      document.getElementById('res-modal-date').textContent = new Date(a.completed_at).toLocaleString();
+      document.getElementById('res-modal-score').textContent = `${a.score} / ${a.total}`;
+      const perc = a.total > 0 ? (a.score / a.total) * 100 : 0;
+      document.getElementById('res-modal-perc').textContent = perc.toFixed(1) + '%';
+      document.getElementById('res-modal-rank').textContent = `Ranked ${rankStr} on this test`;
+
+      let sbHtml = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+      document.getElementById('res-modal-subjects-tbody').innerHTML = sbHtml;
+      
+      (async () => {
+        try {
+          const { data: questions } = await supabase.from('questions').select('id, subject, correct_option').eq('test_id', a.test_id);
+          if (!questions) return;
+          let subjStats = {};
+          let answersObj = typeof a.answers === 'string' ? JSON.parse(a.answers) : a.answers;
+          if (!answersObj) answersObj = {};
+          
+          questions.forEach(q => {
+            const subj = q.subject || 'General';
+            if (!subjStats[subj]) subjStats[subj] = { attempted: 0, correct: 0, wrong: 0, score: 0 };
+            const ans = answersObj[q.id];
+            if (ans) {
+              subjStats[subj].attempted++;
+              if (ans === q.correct_option) {
+                subjStats[subj].correct++;
+                subjStats[subj].score += 4;
+              } else {
+                subjStats[subj].wrong++;
+                subjStats[subj].score -= 1;
+              }
+            }
+          });
+          
+          sbHtml = '';
+          for (const [subj, stats] of Object.entries(subjStats)) {
+            sbHtml += `<tr>
+              <td><strong>${subj}</strong></td>
+              <td>${stats.attempted}</td>
+              <td class="text-success">${stats.correct}</td>
+              <td class="text-error">${stats.wrong}</td>
+              <td><strong>${stats.score}</strong></td>
+            </tr>`;
+          }
+          if (!sbHtml) sbHtml = '<tr><td colspan="5" class="text-center text-muted">No data</td></tr>';
+          document.getElementById('res-modal-subjects-tbody').innerHTML = sbHtml;
+        } catch(e) { console.error(e); }
+      })();
+
+      document.getElementById('res-junior-modal').style.display = 'flex';
+    };
+
+    document.getElementById('res-modal-close').addEventListener('click', () => {
+      document.getElementById('res-junior-modal').style.display = 'none';
+    });
+
+    document.getElementById('res-export-csv').addEventListener('click', () => {
+      const testId = document.getElementById('res-test-select').value;
+      if (!testId) return alert('Please select a test first.');
+      const testAttempts = allAttempts.filter(a => a.test_id == testId);
+      testAttempts.sort((a, b) => {
+        let percA = a.total > 0 ? (a.score / a.total) : 0;
+        let percB = b.total > 0 ? (b.score / b.total) : 0;
+        return percB - percA;
+      });
+
+      let csv = "Rank,Junior Name,University,Score,Total,Percentage,Grade,Date\n";
+      testAttempts.forEach((a, idx) => {
+        const perc = a.total > 0 ? (a.score / a.total) * 100 : 0;
+        const grade = getGrade(perc).letter;
+        const date = new Date(a.completed_at).toLocaleDateString();
+        const name = (a.profiles?.full_name || 'Unknown').replace(/,/g, '');
+        const uni = (a.profiles?.university || '-').replace(/,/g, '');
+        csv += `${idx+1},${name},${uni},${a.score},${a.total},${perc.toFixed(1)}%,${grade},${date}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const aElem = document.createElement('a');
+      aElem.setAttribute('hidden', '');
+      aElem.setAttribute('href', url);
+      aElem.setAttribute('download', 'test_results.csv');
+      document.body.appendChild(aElem);
+      aElem.click();
+      document.body.removeChild(aElem);
+    });
+
+    document.getElementById('res-junior-search').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const tbody = document.getElementById('res-junior-search-tbody');
+      
+      if (!query || query.length < 2) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Enter search...</td></tr>';
+        return;
+      }
+      
+      let statsMap = {};
+      allAttempts.forEach(a => {
+        const name = (a.profiles?.full_name || 'Unknown').toLowerCase();
+        const uni = (a.profiles?.university || '-').toLowerCase();
+        if (name.includes(query) || uni.includes(query)) {
+          if (!statsMap[a.junior_id]) {
+            statsMap[a.junior_id] = { id: a.junior_id, name: a.profiles?.full_name, uni: a.profiles?.university, tests: 0, totalScore: 0, totalMax: 0 };
+          }
+          statsMap[a.junior_id].tests++;
+          statsMap[a.junior_id].totalScore += a.score;
+          statsMap[a.junior_id].totalMax += a.total;
+        }
+      });
+
+      let arr = Object.values(statsMap);
+      if (arr.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No matches found.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      arr.forEach(s => {
+        let perc = s.totalMax > 0 ? (s.totalScore / s.totalMax) * 100 : 0;
+        html += `
+          <tr>
+            <td><div class="font-semibold">${s.name}</div><div class="text-xs text-muted">${s.uni}</div></td>
+            <td>${s.tests}</td>
+            <td>${perc.toFixed(1)}%</td>
+            <td><button class="btn btn--sm btn--secondary" onclick="viewJuniorHistory('${s.id}')">View</button></td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    });
+
+    window.viewJuniorHistory = (juniorId) => {
+      const history = allAttempts.filter(a => a.junior_id === juniorId);
+      if(history.length === 0) return;
+      
+      let html = \`<tr><td colspan="4" class="p-0">
+        <div style="background: #F9FAFB; padding: 12px; border-radius: 4px; border: 1px solid var(--color-border);">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="m-0 font-semibold">\${history[0].profiles?.full_name}'s History</h4>
+            <button class="btn btn--ghost btn--sm" onclick="document.getElementById('res-junior-search').dispatchEvent(new Event('input'))"><i data-lucide="x"></i> Close</button>
+          </div>
+          <table class="table w-full text-sm">
+            <thead><tr><th>Test</th><th>Score</th><th>%</th><th>Date</th></tr></thead>
+            <tbody>
+      \`;
+      
+      history.forEach(a => {
+        const perc = a.total > 0 ? (a.score / a.total) * 100 : 0;
+        html += \`<tr>
+          <td>\${a.tests?.title || 'Unknown Test'}</td>
+          <td>\${a.score}/\${a.total}</td>
+          <td>\${perc.toFixed(1)}%</td>
+          <td>\${new Date(a.completed_at).toLocaleDateString()}</td>
+        </tr>\`;
+      });
+      
+      html += '</tbody></table></div></td></tr>';
+      document.getElementById('res-junior-search-tbody').innerHTML = html;
+      lucide.createIcons();
+    };
 
   </script>
 </body>
