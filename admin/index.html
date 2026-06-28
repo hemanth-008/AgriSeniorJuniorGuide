@@ -366,25 +366,22 @@
                       <input type="text" id="test-subject" class="form-input" required>
                     </div>
                     <div class="form-group">
-                      <label class="form-label">Type</label>
+                      <label class="form-label">Test Type</label>
                       <select id="test-type" class="form-input">
-                        <option value="unit_30_40">Unit Test (30 Questions, 40 mins)</option>
-                        <option value="unit_40_40">Unit Test (40 Questions, 40 mins)</option>
-                        <option value="unit_45_40">Unit Test (45 Questions, 40 mins)</option>
-                        <option value="grand">Grand Test (120 Questions, 2 hrs)</option>
-                        <option value="numerical">Numerical Agronomy (Special)</option>
+                        <option value="unit">Unit Test</option>
+                        <option value="grand">Grand Test</option>
+                        <option value="numerical">Numerical Agronomy</option>
                       </select>
                     </div>
                   </div>
-                  <div class="grid-2">
-                    <div class="form-group">
-                      <label class="form-label">Duration (mins)</label>
-                      <input type="number" id="test-duration" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Total Questions</label>
-                      <input type="number" id="test-total-q" class="form-input" required>
-                    </div>
+                  <div class="form-group">
+                    <label class="form-label">Number of Questions <span style="color:#6B7280; font-size:12px;">(you can add more questions than this limit)</span></label>
+                    <input type="number" id="test-total-questions" class="form-input" min="1" max="200" placeholder="e.g. 30" onkeydown="return event.key !== '-' && event.key !== 'e'">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Exam Duration (in minutes)</label>
+                    <input type="number" id="test-duration" class="form-input" min="1" max="300" placeholder="e.g. 45" onkeydown="return event.key !== '-' && event.key !== 'e'">
+                    <small style="color:#6B7280;">Common durations: 40 mins (unit) · 45 mins (unit) · 60 mins · 120 mins (grand)</small>
                   </div>
                   <button type="submit" class="btn btn--primary w-full">Create Test</button>
                 </form>
@@ -1209,32 +1206,39 @@
     }
 
     function bindTestBuilder() {
-      // Auto-fill duration and total questions based on test type
-      document.getElementById('test-type').addEventListener('change', function() {
-        const configs = {
-          'unit_30_40': { questions: 30, duration: 40 },
-          'unit_40_40': { questions: 40, duration: 40 },
-          'unit_45_40': { questions: 45, duration: 40 },
-          'grand':      { questions: 120, duration: 120 },
-          'numerical':  { questions: 30, duration: 40 }
-        };
-        const config = configs[this.value];
-        if (config) {
-          document.getElementById('test-duration').value = config.duration;
-          document.getElementById('test-total-q').value = config.questions;
-        }
-      });
-
       // Step 1: Create Test
       document.getElementById('form-create-test').addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // Validation
+        const totalQuestions = parseInt(document.getElementById('test-total-questions').value);
+        const duration = parseInt(document.getElementById('test-duration').value);
+
+        if (!totalQuestions || totalQuestions < 1) {
+          alert('Please enter number of questions (minimum 1)');
+          return;
+        }
+        if (!duration || duration < 1) {
+          alert('Please enter exam duration in minutes (minimum 1)');
+          return;
+        }
+        if (totalQuestions > 200) {
+          alert('Maximum 200 questions allowed per test');
+          return;
+        }
+        if (duration > 300) {
+          alert('Maximum 300 minutes (5 hours) allowed');
+          return;
+        }
+
         try {
-          const testType = document.getElementById('test-type').value.toLowerCase().trim();
+          const testType = document.getElementById('test-type').value;
           const { data, error } = await supabase.from('tests').insert({
             title: document.getElementById('test-title').value,
             subject: document.getElementById('test-subject').value,
             test_type: testType,
-            duration_minutes: document.getElementById('test-duration').value,
+            total_questions: totalQuestions,
+            duration_minutes: duration,
             status: 'draft'
           }).select().single();
 
